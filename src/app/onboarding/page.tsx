@@ -7,11 +7,9 @@ import { ChevronRight } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ONBOARDING_PAGES, ROUTES } from '@/lib/constants';
 import { deviceUtils } from '@/lib/device-utils';
-import { useMemberStore } from '@/store/memberStore';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { initializeMember } = useMemberStore();
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const totalPages = ONBOARDING_PAGES.length;
@@ -20,7 +18,7 @@ export default function OnboardingPage() {
     if (currentPage < totalPages - 1) {
       setCurrentPage(prev => prev + 1);
     } else {
-      // 마지막 페이지에서 회원 생성 후 민감도 설정으로 이동
+      // 마지막 페이지에서 민감도 설정으로 이동
       handleOnboardingComplete();
     }
   };
@@ -29,23 +27,14 @@ export default function OnboardingPage() {
     setIsLoading(true);
 
     try {
-      console.log('온보딩 완료 → 회원 생성 시작');
+      console.log('온보딩 완료 → 민감도 설정으로 이동');
 
       // deviceId 생성 (이미 생성되어 있을 수도 있음)
       const deviceId = deviceUtils.getDeviceId();
-      console.log('생성된 deviceId:', deviceId);
+      console.log('현재 deviceId:', deviceId);
 
-      // 회원 생성
-      const success = await initializeMember();
-
-      if (success) {
-        console.log('회원 생성 완료 → 민감도 설정으로 이동');
-        router.push(ROUTES.sensitivitySetup);
-      } else {
-        console.error('회원 생성 실패');
-        // 실패해도 민감도 설정으로 이동 (로컬에서라도 진행)
-        router.push(ROUTES.sensitivitySetup);
-      }
+      // 🔧 단순히 민감도 설정으로 이동 (회원 생성은 민감도 설정 완료 시)
+      router.push(ROUTES.sensitivitySetup);
     } catch (error) {
       console.error('온보딩 완료 처리 오류:', error);
       // 오류 발생해도 민감도 설정으로 이동

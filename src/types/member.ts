@@ -7,6 +7,12 @@ export interface MemberCreateRequest {
   cityName?: string;
 }
 
+// 🆕 회원 상태 응답 (스플래시용)
+export interface MemberStatusResponse {
+  memberExists: boolean;
+  isSetupCompleted: boolean;
+}
+
 // 회원 응답
 export interface MemberResponse {
   id: number;

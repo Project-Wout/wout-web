@@ -7,11 +7,12 @@ import {
   requestLocationPermission,
 } from '@/store/weatherStore';
 import { useSensitivityStore } from '@/store/sensitivityStore';
-import { useFeedbackStore } from '@/store/feedbackStore'; // 추가
+import { useMemberStore } from '@/store/memberStore';
+import { useFeedbackStore } from '@/store/feedbackStore';
 import WeatherCard from '@/components/weather/WeatherCard';
 import WeatherScore from '@/components/weather/WeatherScore';
 import OutfitRecommendation from '@/components/outfit/OutfitRecommendation';
-import FeedbackModal from '@/components/feedback/FeedbackModal'; // 추가
+import FeedbackModal from '@/components/feedback/FeedbackModal';
 import { Button } from '@/components/ui/Button';
 import { MapPin, Settings, RefreshCw } from 'lucide-react';
 
@@ -28,21 +29,27 @@ export default function DashboardPage() {
     refreshData,
     clearError,
   } = useWeatherStore();
-  const { isCompleted } = useSensitivityStore();
 
-  // 피드백 스토어 추가
+  const { isCompleted } = useSensitivityStore();
+  const { getMemberWithPreference } = useMemberStore();
   const { isModalOpen, closeModal, openModal } = useFeedbackStore();
 
-  // 초기 위치 권한 요청 및 데이터 로드
+  // 🔧 초기 데이터 로드 개선
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // 1) 위치 정보 확인/요청
         if (!location) {
+          console.log('위치 정보 요청 시작');
           const locationInfo = await requestLocationPermission();
           setLocation(locationInfo);
         }
+
+        // 2) 회원 정보 로드 (대시보드 접근 시 최신 정보 확인)
+        console.log('회원 정보 로드 시작');
+        await getMemberWithPreference();
       } catch (error) {
-        console.error('위치 초기화 실패:', error);
+        console.error('대시보드 초기화 실패:', error);
         // 기본 위치 설정 (부산)
         setLocation({
           lat: 35.1796,
@@ -54,11 +61,12 @@ export default function DashboardPage() {
     };
 
     initializeApp();
-  }, [location, setLocation]);
+  }, [location, setLocation, getMemberWithPreference]);
 
   // 민감도 설정이 완료되지 않았으면 설정 페이지로 이동
   useEffect(() => {
     if (!isCompleted) {
+      console.log('민감도 설정 미완료 → 설정 페이지로 이동');
       router.push('/sensitivity-setup');
     }
   }, [isCompleted, router]);
@@ -81,26 +89,26 @@ export default function DashboardPage() {
     router.push('/sensitivity-setup');
   };
 
-  // 피드백 모달 열기 핸들러 추가
+  // 피드백 모달 열기 핸들러
   const handleOpenFeedback = () => {
     if (!currentWeather || !personalScore) {
       console.warn('날씨 데이터가 없어서 피드백을 열 수 없습니다.');
       return;
     }
 
-    // 현재 추천 데이터 구성 (기존 타입 구조에 맞게)
+    // 현재 추천 데이터 구성
     const recommendationData = {
       id: `rec_${Date.now()}`,
-      weatherScore: personalScore.total, // total 속성 사용
+      weatherScore: personalScore.total,
       weatherData: {
         temperature: currentWeather.current.temperature,
         feelsLike:
-          personalFeelsLike?.calculated || currentWeather.current.feelsLike, // calculated 속성 사용
+          personalFeelsLike?.calculated || currentWeather.current.feelsLike,
         humidity: currentWeather.current.humidity,
         windSpeed: currentWeather.current.windSpeed,
       },
       outfitRecommendation: {
-        top: '니트', // 실제로는 현재 추천에서 가져와야 함
+        top: '니트',
         bottom: '긴바지',
         outer: '바람막이',
         accessories: ['목도리'],
@@ -211,7 +219,7 @@ export default function DashboardPage() {
             <OutfitRecommendation />
           </div>
 
-          {/* 피드백 섹션 - 수정된 부분 */}
+          {/* 피드백 섹션 */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="text-center">
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
@@ -221,7 +229,6 @@ export default function DashboardPage() {
                 피드백을 주시면 더 정확한 추천을 받을 수 있어요
               </p>
 
-              {/* 기존 간단 버튼들 제거하고 피드백 모달 버튼으로 교체 */}
               <Button
                 onClick={handleOpenFeedback}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 text-base font-semibold hover:shadow-lg transition-all duration-200"
@@ -238,7 +245,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {/* 피드백 모달 추가 - 기존 FeedbackModal 사용 */}
+      {/* 피드백 모달 */}
       {currentWeather && personalScore && (
         <FeedbackModal
           isOpen={isModalOpen}
@@ -250,7 +257,7 @@ export default function DashboardPage() {
             humidity: currentWeather.current.humidity,
             windSpeed: currentWeather.current.windSpeed,
           }}
-          recommendedOutfit="니트 + 긴바지 + 바람막이" // 실제 추천에서 가져와야 함
+          recommendedOutfit="니트 + 긴바지 + 바람막이"
         />
       )}
 

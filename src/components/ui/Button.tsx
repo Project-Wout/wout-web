@@ -45,5 +45,4 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
-// 기본 export도 추가
 export default Button;

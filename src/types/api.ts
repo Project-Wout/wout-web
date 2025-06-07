@@ -1,9 +1,9 @@
-// 공통 API 응답 래퍼
+// 🔧 백엔드 ApiResponse 구조에 맞춘 공통 응답 타입
 export interface ApiResponse<T> {
   success: boolean;
-  data: T;
+  code?: string;
   message?: string;
-  errorCode?: string;
+  data?: T;
 }
 
 // 페이지네이션 관련

@@ -9,7 +9,7 @@ import { useMemberStore } from '@/store/memberStore';
 
 export default function HomePage() {
   const router = useRouter();
-  const { initializeMember, isSetupCompleted } = useMemberStore();
+  const { checkMemberStatus } = useMemberStore();
   const [loading, setLoading] = useState(true);
   const [initializingText, setInitializingText] =
     useState('앱을 준비하는 중...');
@@ -34,26 +34,35 @@ export default function HomePage() {
           return;
         }
 
-        // 기존 사용자 → 회원 정보 확인
-        console.log('기존 사용자 → 회원 정보 확인');
-        setInitializingText('회원 정보를 불러오는 중...');
+        // 기존 사용자 → 회원 상태 확인
+        const deviceId = deviceUtils.getDeviceId();
+        console.log('기존 사용자 → 회원 상태 확인:', deviceId);
+        setInitializingText('회원 정보를 확인하는 중...');
 
-        const success = await initializeMember();
+        const status = await checkMemberStatus();
 
-        if (!success) {
+        if (!status) {
           // API 호출 실패 → 온보딩으로 이동 (안전장치)
-          console.log('회원 정보 확인 실패 → 온보딩 페이지로 이동');
+          console.log('회원 상태 확인 실패 → 온보딩 페이지로 이동');
           router.push(ROUTES.onboarding);
           return;
         }
 
-        // 민감도 설정 완료 여부 확인
-        if (isSetupCompleted) {
-          console.log('설정 완료 → 메인 대시보드로 이동');
-          router.push('/dashboard');
-        } else {
+        console.log('회원 상태:', status);
+
+        // 상태에 따른 페이지 이동
+        if (!status.memberExists) {
+          // 회원 없음 → 온보딩
+          console.log('회원 없음 → 온보딩 페이지로 이동');
+          router.push(ROUTES.onboarding);
+        } else if (!status.isSetupCompleted) {
+          // 회원 있지만 설정 미완료 → 민감도 설정
           console.log('설정 미완료 → 민감도 설정으로 이동');
           router.push('/sensitivity-setup');
+        } else {
+          // 회원 있고 설정 완료 → 메인 대시보드
+          console.log('설정 완료 → 메인 대시보드로 이동');
+          router.push('/dashboard');
         }
       } catch (error) {
         console.error('앱 초기화 오류:', error);
@@ -65,7 +74,7 @@ export default function HomePage() {
     };
 
     initializeApp();
-  }, [router, initializeMember, isSetupCompleted]);
+  }, [router, checkMemberStatus]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-primary text-white relative overflow-hidden">

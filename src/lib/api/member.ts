@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import type { ApiResponse } from '@/types/api';
 import type {
   MemberCreateRequest,
+  MemberStatusResponse,
   MemberWithPreferenceResponse,
   WeatherPreferenceSetupRequest,
   WeatherPreferenceResponse,
@@ -13,39 +14,36 @@ import type {
 } from '@/types/member';
 
 export const memberApi = {
-  // 앱 초기화 (회원 확인/생성)
-  async initializeMember(
+  // 🆕 회원 상태 확인 (스플래시용)
+  async checkMemberStatus(
     deviceId: string,
-    options?: {
-      nickname?: string;
-      latitude?: number;
-      longitude?: number;
-      cityName?: string;
-    },
-  ): Promise<ApiResponse<MemberWithPreferenceResponse>> {
-    const request: MemberCreateRequest = {
-      deviceId,
-      ...options,
-    };
-
-    return apiClient.post<ApiResponse<MemberWithPreferenceResponse>>(
-      '/api/members/init',
-      request,
+  ): Promise<ApiResponse<MemberStatusResponse>> {
+    return apiClient.get<ApiResponse<MemberStatusResponse>>(
+      `/api/members/status/${deviceId}`,
     );
   },
 
-  // 5단계 날씨 선호도 설정
-  async setupWeatherPreference(
+  // 🆕 민감도 설정과 동시에 회원 생성 (신규 사용자용)
+  async setupWithPreference(
     deviceId: string,
     request: WeatherPreferenceSetupRequest,
   ): Promise<ApiResponse<WeatherPreferenceResponse>> {
     return apiClient.post<ApiResponse<WeatherPreferenceResponse>>(
-      `/api/members/${deviceId}/weather-preference`,
+      `/api/members/${deviceId}/setup-with-preference`,
       request,
     );
   },
 
-  // 날씨 선호도 수정
+  // 🆕 기존 회원 정보 + 선호도 조회 (대시보드용)
+  async getMemberWithPreference(
+    deviceId: string,
+  ): Promise<ApiResponse<MemberWithPreferenceResponse>> {
+    return apiClient.get<ApiResponse<MemberWithPreferenceResponse>>(
+      `/api/members/${deviceId}`,
+    );
+  },
+
+  // 날씨 선호도 수정 (기존 회원용)
   async updateWeatherPreference(
     deviceId: string,
     request: WeatherPreferenceUpdateRequest,

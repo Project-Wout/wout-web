@@ -54,17 +54,27 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
       );
       console.log('백엔드 응답:', response);
 
-      if (!response.success) {
-        throw new Error(response.message || 'API 호출 실패');
+      // 🔧 안전성 검사 추가
+      if (!response || !response.success || !response.data) {
+        throw new Error(response?.message || 'API 응답이 올바르지 않습니다');
       }
 
       const backendData = response.data;
+
+      // 🔧 백엔드 데이터 유효성 검사
+      if (
+        !backendData.weatherInfo ||
+        !backendData.location ||
+        !backendData.elementScores
+      ) {
+        throw new Error('백엔드 응답 데이터가 불완전합니다');
+      }
 
       // 백엔드 데이터를 기존 WeatherData 타입으로 변환
       const weatherData: WeatherData = {
         id: '1',
         location: {
-          name: backendData.location.cityName,
+          name: backendData.location.cityName || '알 수 없는 위치',
           lat: backendData.location.latitude,
           lon: backendData.location.longitude,
         },
@@ -78,28 +88,28 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
           visibility: 10, // 백엔드에서 제공되지 않음
           uvIndex: backendData.weatherInfo.uvIndex,
           condition: 'clear', // 기본값 (나중에 온도 기반으로 계산 가능)
-          description: backendData.message,
+          description: backendData.message || '날씨 정보',
         },
         airQuality: {
-          pm25: backendData.weatherInfo.pm25,
-          pm10: backendData.weatherInfo.pm10,
-          quality: getAirQualityGrade(backendData.weatherInfo.pm25),
+          pm25: backendData.weatherInfo.pm25 || 0,
+          pm10: backendData.weatherInfo.pm10 || 0,
+          quality: getAirQualityGrade(backendData.weatherInfo.pm25 || 0),
         },
         timestamp: new Date().toISOString(),
       };
 
       // 백엔드에서 받은 개인화 점수
       const personalScore: WeatherScore = {
-        total: backendData.totalScore,
-        emoji: getGradeEmoji(backendData.grade),
-        grade: convertGradeToLowercase(backendData.grade),
-        message: backendData.message,
+        total: backendData.totalScore || 0,
+        emoji: getGradeEmoji(backendData.grade || 'FAIR'),
+        grade: convertGradeToLowercase(backendData.grade || 'FAIR'),
+        message: backendData.message || '날씨 정보를 확인하세요',
         breakdown: {
-          temperature: backendData.elementScores.temperature,
-          humidity: backendData.elementScores.humidity,
-          windSpeed: backendData.elementScores.wind,
-          airQuality: backendData.elementScores.airQuality,
-          uvIndex: backendData.elementScores.uv,
+          temperature: backendData.elementScores.temperature || 0,
+          humidity: backendData.elementScores.humidity || 0,
+          windSpeed: backendData.elementScores.wind || 0,
+          airQuality: backendData.elementScores.airQuality || 0,
+          uvIndex: backendData.elementScores.uv || 0,
         },
       };
 

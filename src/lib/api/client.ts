@@ -96,5 +96,5 @@ export class ApiClient {
     return response.json();
   }
 }
-
+// 싱글톤 인스턴스 export
 export const apiClient = new ApiClient();

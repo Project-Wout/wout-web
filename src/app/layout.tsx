@@ -1,22 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ReactNode } from 'react';
 import './globals.css';
 import { APP_INFO } from '@/lib/constants';
 import BottomTabBar from '@/components/common/BottomTabBar';
 
+// 🔧 Next.js 14 권장: metadata와 viewport 분리 (경고 해결)
 export const metadata: Metadata = {
   title: `${APP_INFO.name} - ${APP_INFO.description}`,
   description: APP_INFO.slogan,
   keywords: ['날씨', '옷차림', '추천', '스타일링', '개인화'],
   authors: [{ name: 'Wout Team' }],
   creator: 'Wout Team',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  themeColor: '#667eea',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
@@ -46,6 +40,15 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+};
+
+// 🆕 Next.js 14 권장: viewport를 별도 export (메타데이터 경고 해결)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#667eea',
 };
 
 interface RootLayoutProps {
