@@ -63,7 +63,7 @@ export default function ProfilePage() {
       icon: Settings,
       title: '민감도 재조정',
       description: '날씨 체감 민감도 수정',
-      onClick: () => router.push('/sensitivity-setup'),
+      onClick: () => router.push('/sensitivity-setup?mode=edit'),
       badge: null,
     },
     {

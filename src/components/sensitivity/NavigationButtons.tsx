@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // ✅ useSearchParams 추가
 import { useSensitivityStore } from '@/store/sensitivityStore';
 import { Button } from '@/components/ui/Button';
 
@@ -13,6 +13,9 @@ export default function NavigationButtons({
   onComplete,
 }: NavigationButtonsProps) {
   const router = useRouter();
+  const searchParams = useSearchParams(); // ✅ 추가
+  const isEditMode = searchParams.get('mode') === 'edit'; // ✅ 수정 모드 감지
+
   const {
     currentStep,
     priorities,
@@ -56,20 +59,37 @@ export default function NavigationButtons({
           // 로컬 상태도 완료로 변경 (UI 동기화용)
           completeSetup();
 
-          // 성공 시 대시보드로 이동
-          console.log('설정 완료 → 대시보드로 이동');
-          router.push('/dashboard');
+          // ✅ 수정/신규 모드에 따른 이동 경로 분기
+          if (isEditMode) {
+            // 수정 모드: 프로필 페이지로 복귀
+            console.log('민감도 수정 완료 → 프로필 페이지로 이동');
+            router.push('/profile');
+          } else {
+            // 신규 모드: 대시보드로 이동
+            console.log('설정 완료 → 대시보드로 이동');
+            router.push('/dashboard');
+          }
         } else {
-          // 실패 시에도 일단 대시보드로 이동 (UX 고려)
-          console.log('백엔드 저장 실패했지만 대시보드로 이동');
+          // ✅ 실패 시에도 모드에 따른 이동
+          console.log(`백엔드 ${isEditMode ? '수정' : '저장'} 실패했지만 이동`);
           completeSetup(); // 로컬에서라도 완료 처리
-          router.push('/dashboard');
+
+          if (isEditMode) {
+            router.push('/profile');
+          } else {
+            router.push('/dashboard');
+          }
         }
       } catch (error) {
         console.error('설정 완료 오류:', error);
-        // 오류 시에도 대시보드로 이동 (사용자 경험 고려)
+        // ✅ 오류 시에도 모드에 따른 이동 (사용자 경험 고려)
         completeSetup();
-        router.push('/dashboard');
+
+        if (isEditMode) {
+          router.push('/profile');
+        } else {
+          router.push('/dashboard');
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -83,12 +103,13 @@ export default function NavigationButtons({
     prevStep();
   };
 
+  // ✅ 수정/신규 모드에 따른 버튼 텍스트 분기
   const getButtonText = () => {
     if (currentStep === 5) {
       if (isSubmitting) {
-        return '저장 중...';
+        return isEditMode ? '수정 중...' : '저장 중...';
       }
-      return '설정 완료';
+      return isEditMode ? '수정 완료' : '설정 완료';
     }
     return '다음';
   };

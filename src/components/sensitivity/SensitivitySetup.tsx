@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useSensitivityStore } from '@/store/sensitivityStore';
 import { useMemberStore } from '@/store/memberStore';
 import NavigationButtons from './NavigationButtons';
@@ -11,6 +13,9 @@ import Step5AdjustmentSliders from './steps/Step5AdjustmentSliders';
 import type { WeatherPreferenceSetupRequest } from '@/types/member';
 
 export default function SensitivitySetup() {
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get('mode') === 'edit';
+
   const {
     currentStep,
     priorities,
@@ -19,59 +24,77 @@ export default function SensitivitySetup() {
     humidityReaction,
     adjustments,
     isLoading: sensitivityLoading,
+    setCurrentStep,
   } = useSensitivityStore();
 
-  const { setupWithPreference, isLoading: memberLoading } = useMemberStore();
+  const {
+    setupWithPreference,
+    updateWeatherPreference,
+    isLoading: memberLoading,
+  } = useMemberStore();
 
   const isLoading = sensitivityLoading || memberLoading;
 
-  // 🔧 민감도 설정 완료 처리 (백엔드 API 호출)
+  // 수정 모드 진입 시 1단계로 강제 초기화
+  useEffect(() => {
+    if (isEditMode) {
+      setCurrentStep(1);
+    }
+  }, [isEditMode, setCurrentStep]);
+
+  // 가중치 1-100 → 25-75 변환 함수
+  const convertWeight = (frontendWeight: number): number => {
+    const min = 25;
+    const max = 75;
+    const converted = min + ((frontendWeight - 1) * (max - min)) / 99;
+    return Math.round(Math.max(min, Math.min(max, converted)));
+  };
+
   const handleSetupComplete = async (): Promise<boolean> => {
     try {
-      console.log('민감도 설정 완료 → 백엔드 API 호출 시작');
+      // ✅ 필수값 검증
+      if (adjustments.temp === undefined || adjustments.temp === null) {
+        throw new Error('온도 가중치는 필수입니다');
+      }
+      if (adjustments.humidity === undefined || adjustments.humidity === null) {
+        throw new Error('습도 가중치는 필수입니다');
+      }
+      if (adjustments.uv === undefined || adjustments.uv === null) {
+        throw new Error('자외선 가중치는 필수입니다');
+      }
+      if (
+        adjustments.airquality === undefined ||
+        adjustments.airquality === null
+      ) {
+        throw new Error('대기질 가중치는 필수입니다');
+      }
 
-      // 프론트엔드 데이터를 백엔드 형식으로 변환
       const request: WeatherPreferenceSetupRequest = {
-        // 1단계: 우선순위 (최대 2개)
         priorityFirst: priorities[0] || undefined,
         prioritySecond: priorities[1] || undefined,
-
-        // 2단계: 체감온도 (필수값)
-        comfortTemperature: comfortTemperature,
-
-        // 3단계: 피부 반응
+        comfortTemperature: Math.max(10, Math.min(30, comfortTemperature)),
         skinReaction: skinReaction || undefined,
-
-        // 4단계: 습도 반응
         humidityReaction: humidityReaction || undefined,
 
-        // 5단계: 세부 조정 (기본값 50 적용)
-        temperatureWeight: adjustments.temp || 50,
-        humidityWeight: adjustments.humidity || 50,
-        windWeight: 50, // 프론트에서 설정하지 않으므로 기본값
-        uvWeight: adjustments.uv || 50,
-        airQualityWeight: adjustments.airquality || 50,
+        // ✅ 값이 있을 때만 변환해서 전송
+        temperatureWeight: convertWeight(adjustments.temp),
+        humidityWeight: convertWeight(adjustments.humidity),
+        windWeight: convertWeight(50), // 고정값
+        uvWeight: convertWeight(adjustments.uv),
+        airQualityWeight: convertWeight(adjustments.airquality),
       };
 
-      console.log('백엔드 전송 데이터:', request);
-
-      // 백엔드 검증 규칙 확인
-      if (request.comfortTemperature < 10 || request.comfortTemperature > 30) {
-        throw new Error('체감온도는 10도에서 30도 사이여야 합니다');
-      }
-
-      // 🚀 백엔드에 민감도 설정 + 회원 생성 요청
-      const success = await setupWithPreference(request);
-
-      if (success) {
-        console.log('백엔드 저장 완료');
-        return true;
+      // API 호출
+      let success: boolean;
+      if (isEditMode) {
+        success = await updateWeatherPreference(request);
       } else {
-        console.error('백엔드 저장 실패');
-        return false;
+        success = await setupWithPreference(request);
       }
+
+      return success;
     } catch (error) {
-      console.error('설정 완료 처리 오류:', error);
+      console.error('검증 실패:', error);
       return false;
     }
   };
@@ -97,11 +120,15 @@ export default function SensitivitySetup() {
     <div className="min-h-screen flex flex-col bg-gradient-primary text-white relative overflow-hidden">
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex-1 flex flex-col">
-        {/* 헤더 */}
+        {/* 헤더 - 수정/신규 모드 구분 */}
         <div className="p-6 text-center">
-          <h1 className="text-2xl font-bold mb-2">날씨 민감도 설정</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {isEditMode ? '민감도 재조정' : '날씨 민감도 설정'}
+          </h1>
           <p className="text-blue-100">
-            개인 맞춤 추천을 위해 5단계 설정이 필요해요
+            {isEditMode
+              ? '개인 맞춤 추천을 위해 설정을 업데이트해요'
+              : '개인 맞춤 추천을 위해 5단계 설정이 필요해요'}
           </p>
         </div>
 
@@ -134,12 +161,14 @@ export default function SensitivitySetup() {
         </div>
       </div>
 
-      {/* 로딩 오버레이 */}
+      {/* 로딩 오버레이 - 텍스트 구분 */}
       {isLoading && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 flex flex-col items-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-800 font-medium">설정을 저장하는 중...</p>
+            <p className="text-gray-800 font-medium">
+              {isEditMode ? '설정을 수정하는 중...' : '설정을 저장하는 중...'}
+            </p>
           </div>
         </div>
       )}
