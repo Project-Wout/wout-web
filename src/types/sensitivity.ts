@@ -1,3 +1,5 @@
+import { ReactionLevel } from '@/types/common';
+
 // 기본 민감도 데이터 타입
 export interface SensitivityData {
   // 우선순위 (2개 선택)
@@ -22,39 +24,39 @@ export interface SensitivityData {
   isCompleted: boolean;
 }
 
-// 상태 관리용 인터페이스
 export interface SensitivityState {
-  // 현재 설정 단계
-  currentStep: number;
+  // ✅ 1단계: 민감도
+  reactionCold: ReactionLevel | null;
+  reactionHeat: ReactionLevel | null;
+  reactionHumidity: ReactionLevel | null;
+  reactionUv: ReactionLevel | null;
+  reactionAir: ReactionLevel | null;
 
-  // 설정 데이터 (SensitivityData 확장)
-  priorities: string[];
+  // ✅ 2단계: 체감온도
   comfortTemperature: number;
-  skinReaction: 'high' | 'medium' | 'low' | null;
-  humidityReaction: 'high' | 'medium' | 'low' | null;
-  adjustments: {
-    temp: number;
-    humidity: number;
-    uv: number;
-    airquality: number;
-  };
-  isCompleted: boolean;
 
-  // UI 상태
+  // ✅ 3단계: 중요도
+  importanceCold: number;
+  importanceHeat: number;
+  importanceHumidity: number;
+  importanceUv: number;
+  importanceAir: number;
+
+  // ✅ 상태
+  currentStep: number;
+  isCompleted: boolean;
   isLoading: boolean;
   error: string | null;
 
-  // 액션들
-  setCurrentStep: (step: number) => void;
-  setPriorities: (priorities: string[]) => void;
+  // ✅ 액션
+  setReactionLevel: (key: keyof Pick<SensitivityState, 'reactionCold' | 'reactionHeat' | 'reactionHumidity' | 'reactionUv' | 'reactionAir'>, value: ReactionLevel) => void;
   setComfortTemperature: (temp: number) => void;
-  setSkinReaction: (reaction: 'high' | 'medium' | 'low') => void;
-  setHumidityReaction: (reaction: 'high' | 'medium' | 'low') => void;
-  setAdjustments: (
-    adjustments: Partial<SensitivityState['adjustments']>,
-  ) => void;
-  completeSetup: () => void;
-  resetSetup: () => void;
+  setImportance: (key: keyof Pick<SensitivityState, 'importanceCold' | 'importanceHeat' | 'importanceHumidity' | 'importanceUv' | 'importanceAir'>, value: number) => void;
+
+  setCurrentStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
+
+  completeSetup: () => void;
+  resetSetup: () => void;
 }

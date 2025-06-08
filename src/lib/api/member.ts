@@ -19,7 +19,7 @@ export const memberApi = {
     deviceId: string,
   ): Promise<ApiResponse<MemberStatusResponse>> {
     return apiClient.get<ApiResponse<MemberStatusResponse>>(
-      `/api/members/status/${deviceId}`,
+      `/api/login/status/${deviceId}`,
     );
   },
 
@@ -29,7 +29,7 @@ export const memberApi = {
     request: WeatherPreferenceSetupRequest,
   ): Promise<ApiResponse<WeatherPreferenceResponse>> {
     return apiClient.post<ApiResponse<WeatherPreferenceResponse>>(
-      `/api/members/${deviceId}/setup-with-preference`,
+      `/api/login/${deviceId}/setup-with-preference`,
       request,
     );
   },

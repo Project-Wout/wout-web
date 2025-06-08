@@ -11,8 +11,7 @@ export default function HomePage() {
   const router = useRouter();
   const { checkMemberStatus } = useMemberStore();
   const [loading, setLoading] = useState(true);
-  const [initializingText, setInitializingText] =
-    useState('앱을 준비하는 중...');
+  const [initializingText, setInitializingText] = useState('앱을 준비하는 중...');
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -34,15 +33,12 @@ export default function HomePage() {
           return;
         }
 
-        // 기존 사용자 → 회원 상태 확인
         const deviceId = deviceUtils.getDeviceId();
-        console.log('기존 사용자 → 회원 상태 확인:', deviceId);
         setInitializingText('회원 정보를 확인하는 중...');
 
         const status = await checkMemberStatus();
 
         if (!status) {
-          // API 호출 실패 → 온보딩으로 이동 (안전장치)
           console.log('회원 상태 확인 실패 → 온보딩 페이지로 이동');
           router.push(ROUTES.onboarding);
           return;
@@ -50,23 +46,13 @@ export default function HomePage() {
 
         console.log('회원 상태:', status);
 
-        // 상태에 따른 페이지 이동
-        if (!status.memberExists) {
-          // 회원 없음 → 온보딩
-          console.log('회원 없음 → 온보딩 페이지로 이동');
-          router.push(ROUTES.onboarding);
-        } else if (!status.isSetupCompleted) {
-          // 회원 있지만 설정 미완료 → 민감도 설정
-          console.log('설정 미완료 → 민감도 설정으로 이동');
+        if (!status.isSetupCompleted) {
           router.push('/sensitivity-setup');
         } else {
-          // 회원 있고 설정 완료 → 메인 대시보드
-          console.log('설정 완료 → 메인 대시보드로 이동');
           router.push('/dashboard');
         }
       } catch (error) {
         console.error('앱 초기화 오류:', error);
-        // 오류 시 온보딩으로 이동 (안전장치)
         router.push(ROUTES.onboarding);
       } finally {
         setLoading(false);

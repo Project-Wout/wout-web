@@ -1,131 +1,105 @@
-// 회원 생성 요청
-export interface MemberCreateRequest {
-  deviceId: string;
-  nickname?: string;
-  latitude?: number;
-  longitude?: number;
-  cityName?: string;
+import { ReactionLevel } from '@/types/common';
+
+// 민감도 관련 공통 타입
+export interface ReactionLevels {
+    reactionCold: ReactionLevel;
+    reactionHeat: ReactionLevel;
+    reactionHumidity: ReactionLevel;
+    reactionUv: ReactionLevel;
+    reactionAir: ReactionLevel;
 }
 
-// 🆕 회원 상태 응답 (스플래시용)
+// 중요도 관련 공통 타입
+export interface ImportanceLevels {
+    importanceCold: number;
+    importanceHeat: number;
+    importanceHumidity: number;
+    importanceUv: number;
+    importanceAir: number;
+}
+
+// types/member.ts
+// 회원 생성 요청
+export interface MemberCreateRequest {
+    deviceId: string;
+    nickname?: string;
+    latitude?: number;
+    longitude?: number;
+    cityName?: string;
+}
+
+// 회원 상태 응답 (스플래시용)
 export interface MemberStatusResponse {
-  memberExists: boolean;
-  isSetupCompleted: boolean;
+    isSetupCompleted: boolean;
 }
 
 // 회원 응답
 export interface MemberResponse {
-  id: number;
-  deviceId: string;
-  nickname: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// 날씨 선호도 설정 요청 (5단계)
-export interface WeatherPreferenceSetupRequest {
-  // 1단계: 우선순위 (괴로운 날씨 2개 선택)
-  priorityFirst?: string;
-  prioritySecond?: string;
-
-  // 2단계: 체감온도 기준점
-  comfortTemperature: number;
-
-  // 3단계: 피부 반응
-  skinReaction?: string;
-
-  // 4단계: 습도 민감도
-  humidityReaction?: string;
-
-  // 5단계: 세부 조정 (선택사항)
-  temperatureWeight?: number;
-  humidityWeight?: number;
-  windWeight?: number;
-  uvWeight?: number;
-  airQualityWeight?: number;
-}
-
-// 날씨 선호도 응답
-export interface WeatherPreferenceResponse {
-  id: number;
-  memberId: number;
-  priorityFirst?: string;
-  prioritySecond?: string;
-  comfortTemperature: number;
-  skinReaction?: string;
-  humidityReaction?: string;
-  temperatureWeight: number;
-  humidityWeight: number;
-  windWeight: number;
-  uvWeight: number;
-  airQualityWeight: number;
-  isSetupCompleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// 회원 + 선호도 통합 응답
-export interface MemberWithPreferenceResponse {
-  member: MemberResponse;
-  weatherPreference?: WeatherPreferenceResponse;
+    id: number;
+    deviceId: string;
+    nickname: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 // 닉네임 수정 요청
 export interface NicknameUpdateRequest {
-  nickname: string;
+    nickname: string;
 }
 
 // 위치 수정 요청
 export interface LocationUpdateRequest {
-  latitude: number;
-  longitude: number;
-  cityName?: string;
+    latitude: number;
+    longitude: number;
+    cityName?: string;
 }
 
-// 날씨 선호도 수정 요청
-export interface WeatherPreferenceUpdateRequest {
-  priorityFirst?: string;
-  prioritySecond?: string;
-  comfortTemperature?: number;
-  skinReaction?: string;
-  humidityReaction?: string;
-  temperatureWeight?: number;
-  humidityWeight?: number;
-  windWeight?: number;
-  uvWeight?: number;
-  airQualityWeight?: number;
+// types/weather-preference.ts
+// 날씨 선호도 설정 요청
+export interface WeatherPreferenceSetupRequest extends ReactionLevels, ImportanceLevels {
+    // 체감 온도 기준 (10-30℃)
+    comfortTemperature: number;
+}
+
+// 날씨 선호도 응답
+export interface WeatherPreferenceResponse extends ReactionLevels, ImportanceLevels {
+    id: number;
+    memberId: number;
+
+    // 체감 온도 기준
+    comfortTemperature: number;
+
+    // 계산된 개인 보정치
+    personalTempCorrection: number;
+
+    // 생성/수정 시간
+    createdAt: string;
+    updatedAt: string;
+}
+
+// 날씨 선호도 수정 요청 (모든 필드 optional)
+export interface WeatherPreferenceUpdateRequest extends Partial<ReactionLevels>, Partial<ImportanceLevels> {
+    comfortTemperature?: number;
+}
+
+// 회원 + 선호도 통합 응답
+export interface MemberWithPreferenceResponse {
+    member: MemberResponse;
+    weatherPreference?: WeatherPreferenceResponse;
 }
 
 // 설정 완료 상태 응답
 export interface SetupStatusResponse {
-  isSetupCompleted: boolean;
+    isSetupCompleted: boolean;
 }
 
+// types/constants.ts
 // 우선순위 타입
 export type WeatherPriority =
-  | 'heat'
-  | 'cold'
-  | 'humidity'
-  | 'wind'
-  | 'uv'
-  | 'pollution';
+    | 'heat'
+    | 'cold'
+    | 'humidity'
+    | 'wind'
+    | 'uv'
+    | 'pollution';
 
-// 반응 수준 타입
-export type ReactionLevel = 'high' | 'medium' | 'low';
-
-// 우선순위 옵션 정의
-export const PRIORITY_OPTIONS: Record<WeatherPriority, string> = {
-  heat: '찜통더위',
-  cold: '꽁꽁추위',
-  humidity: '눅눅습함',
-  wind: '바람쌩쌩',
-  uv: '따가운햇빛',
-  pollution: '뿌연공기',
-};
-
-// 반응 수준 옵션 정의
-export const REACTION_LEVEL_OPTIONS: Record<ReactionLevel, string> = {
-  high: '매우 민감함',
-  medium: '보통',
-  low: '둔감함',
-};

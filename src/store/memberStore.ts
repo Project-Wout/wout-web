@@ -21,15 +21,21 @@ interface MemberState {
 
   // 액션들
   checkMemberStatus: () => Promise<MemberStatusResponse | null>;
+
   setupWithPreference: (
     preferences: WeatherPreferenceSetupRequest,
   ) => Promise<boolean>;
+
   getMemberWithPreference: () => Promise<boolean>;
+
   updateWeatherPreference: (
     request: WeatherPreferenceSetupRequest,
   ) => Promise<boolean>;
+
   updateNickname: (nickname: string) => Promise<boolean>;
+
   clearError: () => void;
+
   reset: () => void;
 }
 
@@ -49,27 +55,19 @@ export const useMemberStore = create<MemberState>()(
 
         try {
           const deviceId = deviceUtils.getDeviceId();
-          console.log('회원 상태 확인 시작:', deviceId);
 
           const response = await memberApi.checkMemberStatus(deviceId);
 
           if (!response.success || !response.data) {
-            throw new Error(response.message || '회원 상태 확인 실패');
+            throw new Error(response.message);
           }
 
-          console.log('회원 상태 확인 완료:', response.data);
           set({ isLoading: false });
 
           return response.data;
         } catch (error) {
           console.error('회원 상태 확인 실패:', error);
-          set({
-            error:
-              error instanceof Error
-                ? error.message
-                : '회원 상태 확인에 실패했습니다',
-            isLoading: false,
-          });
+          set({error: error instanceof Error ? error.message : '회원 상태 확인에 실패했습니다', isLoading: false,});
           return null;
         }
       },
