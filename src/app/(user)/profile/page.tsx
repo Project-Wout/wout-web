@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSensitivityStore } from '@/store/sensitivityStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+
 import {
   Settings,
   MapPin,
@@ -19,29 +20,31 @@ import {
 export default function ProfilePage() {
   const router = useRouter();
   const {
-    priorities,
-    comfortTemperature,
-    skinReaction,
-    humidityReaction,
+    step1,
+    step2,
     isCompleted,
-    resetSetup,
+    // resetSetup, // (이 함수도 직접 구현 필요)
   } = useSensitivityStore();
+
+  const comfortTemperature = step2.comfortTemperature;
+  const skinReaction = step1.reactionCold; // 또는 원하는 reaction 필드
+  const humidityReaction = step1.reactionHumidity;
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // 사용자 타입 결정
   const getUserType = () => {
-    if (priorities.includes('cold') || comfortTemperature > 22) {
+    if (comfortTemperature > 22) {
       return { type: '추위를 많이 타는 타입', emoji: '🥶', color: 'blue' };
     }
-    if (priorities.includes('heat')) {
+    if (comfortTemperature < 22) {
       return { type: '더위를 많이 타는 타입', emoji: '🔥', color: 'red' };
     }
-    if (priorities.includes('humidity')) {
+    if (humidityReaction === 'high') {
       return { type: '습도에 민감한 타입', emoji: '💦', color: 'cyan' };
     }
-    if (priorities.includes('uv')) {
-      return { type: '자외선에 민감한 타입', emoji: '☀️', color: 'yellow' };
+    if (humidityReaction === 'low') {
+      return { type: '건조에 민감한 타입', emoji: '🌬️', color: 'indigo' };
     }
     return { type: '일반적인 타입', emoji: '😊', color: 'green' };
   };
@@ -50,7 +53,7 @@ export default function ProfilePage() {
 
   const handleResetSettings = () => {
     if (showResetConfirm) {
-      resetSetup();
+      // resetSetup(); // 직접 구현 필요
       router.push('/sensitivity-setup');
     } else {
       setShowResetConfirm(true);
@@ -142,25 +145,6 @@ export default function ProfilePage() {
                 <span className="text-gray-600">쾌적 온도</span>
                 <span className="font-medium text-blue-800">
                   {comfortTemperature}°C
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">주요 민감 요소</span>
-                <span className="font-medium text-blue-800">
-                  {priorities
-                    .slice(0, 2)
-                    .map(p => {
-                      const labels = {
-                        heat: '더위',
-                        cold: '추위',
-                        humidity: '습도',
-                        wind: '바람',
-                        uv: '자외선',
-                        pollution: '공기질',
-                      };
-                      return labels[p as keyof typeof labels];
-                    })
-                    .join(', ')}
                 </span>
               </div>
               <div className="flex justify-between">

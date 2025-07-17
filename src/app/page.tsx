@@ -11,7 +11,8 @@ export default function HomePage() {
   const router = useRouter();
   const { checkMemberStatus } = useMemberStore();
   const [loading, setLoading] = useState(true);
-  const [initializingText, setInitializingText] = useState('앱을 준비하는 중...');
+  const [initializingText, setInitializingText] =
+    useState('앱을 준비하는 중...');
 
   useEffect(() => {
     const initializeApp = async () => {

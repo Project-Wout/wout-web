@@ -11,7 +11,8 @@ import PersonalTip from './PersonalTip';
 export default function OutfitRecommendation() {
   const { currentWeather, personalScore, personalFeelsLike, isLoading } =
     useWeatherStore();
-  const { priorities, comfortTemperature, isCompleted } = useSensitivityStore();
+  const { step2, isCompleted } = useSensitivityStore();
+  const comfortTemperature = step2.comfortTemperature;
   const [currentRecommendation, setCurrentRecommendation] = useState(0);
 
   if (!isCompleted) {
@@ -58,10 +59,9 @@ export default function OutfitRecommendation() {
       personalFeelsLike?.calculated || currentWeather.current.feelsLike;
     const humidity = currentWeather.current.humidity;
     const windSpeed = currentWeather.current.windSpeed;
-    const isColdSensitive =
-      priorities.includes('cold') || comfortTemperature > 22;
-    const isHeatSensitive = priorities.includes('heat');
-    const isHumiditySensitive = priorities.includes('humidity');
+    const isColdSensitive = comfortTemperature > 22;
+    const isHeatSensitive = comfortTemperature > 22;
+    const isHumiditySensitive = comfortTemperature > 22;
 
     const recommendations = [];
 
@@ -389,7 +389,6 @@ export default function OutfitRecommendation() {
       <PersonalTip
         weatherData={currentWeather}
         personalScore={personalScore}
-        priorities={priorities}
         comfortTemperature={comfortTemperature}
       />
 

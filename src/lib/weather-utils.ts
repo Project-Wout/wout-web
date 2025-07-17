@@ -63,7 +63,7 @@ export function calculatePersonalFeelsLike(
   // 습도 보정 (습도 민감도에 따라)
   let humidityCorrection = 0;
   if (humidity > 70) {
-    switch (sensitivityData.humidityReaction) {
+    switch (sensitivityData.reactionHumidity) {
       case 'high':
         humidityCorrection = 3;
         break;
@@ -128,7 +128,11 @@ export function calculateWeatherScore(
   const penalizedScore = applyPriorityPenalties(
     weightedScore,
     { temperature, humidity, windSpeed, airQuality, uvIndex },
-    sensitivityData.priorities,
+    sensitivityData.importanceCold,
+    sensitivityData.importanceHeat,
+    sensitivityData.importanceHumidity,
+    sensitivityData.importanceUv,
+    sensitivityData.importanceAir,
   );
 
   const finalScore = Math.max(0, Math.min(100, Math.round(penalizedScore)));
@@ -177,7 +181,7 @@ function calculateHumidityScore(
   let score = 100 - deviation * 2;
 
   // 습도 민감도 반영
-  if (sensitivity.humidityReaction === 'high' && humidity > 70) {
+  if (sensitivity.reactionHumidity === 'high' && humidity > 70) {
     score *= 0.7; // 30% 감점
   }
 
@@ -216,7 +220,7 @@ function calculateUVScore(
   let score = Math.max(0, 100 - uvIndex * 10);
 
   // 자외선 민감도 반영
-  if (sensitivity.skinReaction === 'high' && uvIndex > 5) {
+  if (sensitivity.reactionUv === 'high' && uvIndex > 5) {
     score *= 0.6; // 40% 감점
   }
 
@@ -229,32 +233,29 @@ function calculateUVScore(
 function applyPriorityPenalties(
   baseScore: number,
   weather: any,
-  priorities: string[],
+  importanceCold: number,
+  importanceHeat: number,
+  importanceHumidity: number,
+  importanceUv: number,
+  importanceAir: number,
 ): number {
   let penalizedScore = baseScore;
 
-  priorities.forEach(priority => {
-    switch (priority) {
-      case 'heat':
-        if (weather.temperature > 28) penalizedScore *= 0.3;
-        break;
-      case 'cold':
-        if (weather.temperature < 8) penalizedScore *= 0.3;
-        break;
-      case 'humidity':
-        if (weather.humidity > 80) penalizedScore *= 0.3;
-        break;
-      case 'wind':
-        if (weather.windSpeed > 6) penalizedScore *= 0.3;
-        break;
-      case 'uv':
-        if (weather.uvIndex > 8) penalizedScore *= 0.3;
-        break;
-      case 'pollution':
-        if (weather.airQuality > 50) penalizedScore *= 0.3;
-        break;
-    }
-  });
+  if (importanceCold > 0) {
+    if (weather.temperature > 28) penalizedScore *= 0.3;
+  }
+  if (importanceHeat > 0) {
+    if (weather.temperature < 8) penalizedScore *= 0.3;
+  }
+  if (importanceHumidity > 0) {
+    if (weather.humidity > 80) penalizedScore *= 0.3;
+  }
+  if (importanceUv > 0) {
+    if (weather.uvIndex > 8) penalizedScore *= 0.3;
+  }
+  if (importanceAir > 0) {
+    if (weather.airQuality > 50) penalizedScore *= 0.3;
+  }
 
   return penalizedScore;
 }
@@ -301,16 +302,13 @@ function generateScoreMessage(
  * 사용자 타입 추출
  */
 function getUserType(sensitivity: SensitivityData): string {
-  if (
-    sensitivity.priorities.includes('cold') ||
-    sensitivity.comfortTemperature > 22
-  ) {
+  if (sensitivity.importanceCold > 0 || sensitivity.comfortTemperature > 22) {
     return '추위를 많이 타시는 분';
   }
-  if (sensitivity.priorities.includes('heat')) {
+  if (sensitivity.importanceHeat > 0) {
     return '더위를 많이 타시는 분';
   }
-  if (sensitivity.priorities.includes('humidity')) {
+  if (sensitivity.importanceHumidity > 0) {
     return '습한 날씨를 싫어하시는 분';
   }
   return '일반적인 분';

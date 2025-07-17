@@ -5,11 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { useSensitivityStore } from '@/store/sensitivityStore';
 import { useMemberStore } from '@/store/memberStore';
 import NavigationButtons from './NavigationButtons';
-import Step1PrioritySelection from './steps/Step1PrioritySelection';
-import Step2TemperatureSlider from './steps/Step2TemperatureSlider';
-import Step3SkinReaction from './steps/Step3SkinReaction';
-import Step4HumidityReaction from './steps/Step4HumidityReaction';
-import Step5AdjustmentSliders from './steps/Step5AdjustmentSliders';
+import SensitivityStep1 from './steps/SensitivityStep1';
+import SensitivityStep2 from './steps/SensitivityStep2';
+import SensitivityStep3 from './steps/SensitivityStep3';
 import type { WeatherPreferenceSetupRequest } from '@/types/member';
 
 export default function SensitivitySetup() {
@@ -18,11 +16,9 @@ export default function SensitivitySetup() {
 
   const {
     currentStep,
-    priorities,
-    comfortTemperature,
-    skinReaction,
-    humidityReaction,
-    adjustments,
+    step1,
+    step2,
+    step3,
     isLoading: sensitivityLoading,
     setCurrentStep,
   } = useSensitivityStore();
@@ -53,35 +49,34 @@ export default function SensitivitySetup() {
   const handleSetupComplete = async (): Promise<boolean> => {
     try {
       // ✅ 필수값 검증
-      if (adjustments.temp === undefined || adjustments.temp === null) {
+      if (step3.importanceCold === undefined || step3.importanceCold === null) {
         throw new Error('온도 가중치는 필수입니다');
       }
-      if (adjustments.humidity === undefined || adjustments.humidity === null) {
+      if (step3.importanceHeat === undefined || step3.importanceHeat === null) {
         throw new Error('습도 가중치는 필수입니다');
       }
-      if (adjustments.uv === undefined || adjustments.uv === null) {
+      if (step3.importanceUv === undefined || step3.importanceUv === null) {
         throw new Error('자외선 가중치는 필수입니다');
       }
-      if (
-        adjustments.airquality === undefined ||
-        adjustments.airquality === null
-      ) {
+      if (step3.importanceAir === undefined || step3.importanceAir === null) {
         throw new Error('대기질 가중치는 필수입니다');
       }
 
       const request: WeatherPreferenceSetupRequest = {
-        priorityFirst: priorities[0] || undefined,
-        prioritySecond: priorities[1] || undefined,
-        comfortTemperature: Math.max(10, Math.min(30, comfortTemperature)),
-        skinReaction: skinReaction || undefined,
-        humidityReaction: humidityReaction || undefined,
-
-        // ✅ 값이 있을 때만 변환해서 전송
-        temperatureWeight: convertWeight(adjustments.temp),
-        humidityWeight: convertWeight(adjustments.humidity),
-        windWeight: convertWeight(50), // 고정값
-        uvWeight: convertWeight(adjustments.uv),
-        airQualityWeight: convertWeight(adjustments.airquality),
+        reactionCold: step1.reactionCold || 'medium',
+        reactionHeat: step1.reactionHeat || 'medium',
+        reactionHumidity: step1.reactionHumidity || 'medium',
+        reactionUv: step1.reactionUv || 'medium',
+        reactionAir: step1.reactionAir || 'medium',
+        importanceCold: convertWeight(step3.importanceCold),
+        importanceHeat: convertWeight(step3.importanceHeat),
+        importanceHumidity: convertWeight(step3.importanceHumidity),
+        importanceUv: convertWeight(step3.importanceUv),
+        importanceAir: convertWeight(step3.importanceAir),
+        comfortTemperature: Math.max(
+          10,
+          Math.min(30, step2.comfortTemperature),
+        ),
       };
 
       // API 호출
@@ -102,17 +97,33 @@ export default function SensitivitySetup() {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1PrioritySelection />;
+        return (
+          <SensitivityStep1
+            onNext={() => setCurrentStep(2)}
+            onPrev={() => setCurrentStep(1)}
+          />
+        );
       case 2:
-        return <Step2TemperatureSlider />;
+        return (
+          <SensitivityStep2
+            onNext={() => setCurrentStep(3)}
+            onPrev={() => setCurrentStep(2)}
+          />
+        );
       case 3:
-        return <Step3SkinReaction />;
-      case 4:
-        return <Step4HumidityReaction />;
-      case 5:
-        return <Step5AdjustmentSliders />;
+        return (
+          <SensitivityStep3
+            onComplete={handleSetupComplete}
+            onPrev={() => setCurrentStep(2)}
+          />
+        );
       default:
-        return <Step1PrioritySelection />;
+        return (
+          <SensitivityStep1
+            onNext={() => setCurrentStep(2)}
+            onPrev={() => setCurrentStep(1)}
+          />
+        );
     }
   };
 

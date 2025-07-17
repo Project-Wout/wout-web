@@ -5,14 +5,12 @@ import { WeatherData, WeatherScore } from '@/types/weather';
 interface PersonalTipProps {
   weatherData: WeatherData;
   personalScore: WeatherScore | null;
-  priorities: string[];
   comfortTemperature: number;
 }
 
 export default function PersonalTip({
   weatherData,
   personalScore,
-  priorities,
   comfortTemperature,
 }: PersonalTipProps) {
   const generatePersonalTip = (): {
@@ -21,15 +19,12 @@ export default function PersonalTip({
     type: 'info' | 'warning' | 'success';
   } => {
     const { current, airQuality } = weatherData;
-    const isColdSensitive =
-      priorities.includes('cold') || comfortTemperature > 22;
-    const isHeatSensitive = priorities.includes('heat');
-    const isHumiditySensitive = priorities.includes('humidity');
-    const isUVSensitive = priorities.includes('uv');
-    const isAirSensitive = priorities.includes('pollution');
+    const isColdSensitive = comfortTemperature > 22;
+    const isHeatSensitive = comfortTemperature > 22;
+    const isHumiditySensitive = comfortTemperature > 22;
 
     // 우선순위에 따른 개인화 팁 생성
-    if (priorities.includes('cold') && current.temperature <= 10) {
+    if (isColdSensitive && current.temperature <= 10) {
       return {
         title: '추위 주의',
         message: '평소 추위를 많이 타시는 편이라 한 겹 더 입는 걸 추천해요!',
@@ -37,7 +32,7 @@ export default function PersonalTip({
       };
     }
 
-    if (priorities.includes('heat') && current.temperature >= 25) {
+    if (isHeatSensitive && current.temperature >= 25) {
       return {
         title: '더위 주의',
         message:
@@ -46,38 +41,11 @@ export default function PersonalTip({
       };
     }
 
-    if (priorities.includes('humidity') && current.humidity >= 75) {
+    if (isHumiditySensitive && current.humidity >= 75) {
       return {
         title: '습도 높음',
         message:
           '습한 날씨를 특히 싫어하시는데 습도가 높아서 통풍 잘 되는 옷을 추천해요!',
-        type: 'warning',
-      };
-    }
-
-    if (priorities.includes('uv') && current.uvIndex >= 6) {
-      return {
-        title: '자외선 강함',
-        message:
-          '자외선에 예민하셔서 긴팔이나 자외선 차단복, 모자 착용을 꼭 권해요!',
-        type: 'warning',
-      };
-    }
-
-    if (priorities.includes('pollution') && airQuality.pm25 >= 35) {
-      return {
-        title: '공기질 나쁨',
-        message:
-          '대기질을 신경 쓰시니까 마스크 착용하고 실외 활동을 줄이는 게 좋겠어요!',
-        type: 'warning',
-      };
-    }
-
-    if (priorities.includes('wind') && current.windSpeed >= 5) {
-      return {
-        title: '바람 강함',
-        message:
-          '바람을 싫어하시는데 풍속이 강해서 바람막이나 후드가 있는 옷을 추천해요!',
         type: 'warning',
       };
     }

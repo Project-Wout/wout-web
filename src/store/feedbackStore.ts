@@ -1,20 +1,13 @@
-/**
- * packageName    : src/store
- * fileName       : feedbackStore.ts
- * author         : MinKyu Park
- * date           : 2025-06-03
- * description    : 피드백 모달 및 피드백 데이터 상태 관리 스토어
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2025-06-03        MinKyu Park       최초 생성
- */
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // 피드백 타입 정의
-export type FeedbackType = 'TOO_COLD' | 'SLIGHTLY_COLD' | 'PERFECT' | 'SLIGHTLY_HOT' | 'TOO_HOT';
+export type FeedbackType =
+  | 'TOO_COLD'
+  | 'SLIGHTLY_COLD'
+  | 'PERFECT'
+  | 'SLIGHTLY_HOT'
+  | 'TOO_HOT';
 
 // 피드백 데이터 인터페이스
 export interface FeedbackData {
@@ -63,24 +56,24 @@ interface FeedbackStore {
   isModalOpen: boolean;
   selectedFeedback: FeedbackType | null;
   currentRecommendation: RecommendationData | null;
-  
+
   // 피드백 히스토리
   feedbackHistory: FeedbackData[];
-  
+
   // 통계 데이터
   totalFeedbacks: number;
   averageAccuracy: number;
-  
+
   // 액션 메서드들
   openModal: (recommendation: RecommendationData) => void;
   closeModal: () => void;
   selectFeedback: (feedbackType: FeedbackType) => void;
   submitFeedback: (comment?: string) => Promise<boolean>;
-  
+
   // 히스토리 관리
   getFeedbackHistory: () => FeedbackData[];
   clearHistory: () => void;
-  
+
   // 통계 계산
   calculateAccuracy: () => void;
   getRecentFeedbacks: (days: number) => FeedbackData[];
@@ -123,8 +116,9 @@ export const useFeedbackStore = create<FeedbackStore>()(
 
       // 피드백 제출
       submitFeedback: async (comment?: string): Promise<boolean> => {
-        const { selectedFeedback, currentRecommendation, feedbackHistory } = get();
-        
+        const { selectedFeedback, currentRecommendation, feedbackHistory } =
+          get();
+
         if (!selectedFeedback || !currentRecommendation) {
           console.warn('피드백 또는 추천 데이터가 없습니다.');
           return false;
@@ -145,7 +139,7 @@ export const useFeedbackStore = create<FeedbackStore>()(
 
           // 히스토리에 추가 (최신순으로 정렬)
           const updatedHistory = [newFeedback, ...feedbackHistory];
-          
+
           // 상태 업데이트
           set({
             feedbackHistory: updatedHistory,
@@ -183,18 +177,20 @@ export const useFeedbackStore = create<FeedbackStore>()(
       // 정확도 계산 (PERFECT 피드백 비율)
       calculateAccuracy: () => {
         const { feedbackHistory } = get();
-        
+
         if (feedbackHistory.length === 0) {
           set({ averageAccuracy: 0 });
           return;
         }
 
         const perfectFeedbacks = feedbackHistory.filter(
-          feedback => feedback.feedbackType === 'PERFECT'
+          feedback => feedback.feedbackType === 'PERFECT',
         ).length;
-        
-        const accuracy = Math.round((perfectFeedbacks / feedbackHistory.length) * 100);
-        
+
+        const accuracy = Math.round(
+          (perfectFeedbacks / feedbackHistory.length) * 100,
+        );
+
         set({ averageAccuracy: accuracy });
       },
 
@@ -204,21 +200,21 @@ export const useFeedbackStore = create<FeedbackStore>()(
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
 
-        return feedbackHistory.filter(feedback => 
-          new Date(feedback.submittedAt) >= cutoffDate
+        return feedbackHistory.filter(
+          feedback => new Date(feedback.submittedAt) >= cutoffDate,
         );
       },
     }),
     {
       name: 'wout-feedback-store',
-      partialize: (state) => ({
+      partialize: state => ({
         // 모달 상태는 저장하지 않고, 히스토리와 통계만 영구 저장
         feedbackHistory: state.feedbackHistory,
         totalFeedbacks: state.totalFeedbacks,
         averageAccuracy: state.averageAccuracy,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // 피드백 타입별 표시 정보
@@ -273,13 +269,17 @@ export const feedbackUtils = {
   },
 
   // 최근 피드백 트렌드 분석
-  analyzeTrend: (feedbacks: FeedbackData[]): 'IMPROVING' | 'STABLE' | 'DECLINING' => {
+  analyzeTrend: (
+    feedbacks: FeedbackData[],
+  ): 'IMPROVING' | 'STABLE' | 'DECLINING' => {
     if (feedbacks.length < 5) return 'STABLE';
 
     const recent = feedbacks.slice(0, 5);
     const older = feedbacks.slice(5, 10);
 
-    const recentPerfect = recent.filter(f => f.feedbackType === 'PERFECT').length;
+    const recentPerfect = recent.filter(
+      f => f.feedbackType === 'PERFECT',
+    ).length;
     const olderPerfect = older.filter(f => f.feedbackType === 'PERFECT').length;
 
     const recentAccuracy = recentPerfect / recent.length;

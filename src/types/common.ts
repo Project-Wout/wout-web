@@ -1,1 +1,1 @@
-export type ReactionLevel = 'high' | 'medium' | 'low';
+export type ReactionLevel = 'high' | 'medium' | 'low' | 'none';
