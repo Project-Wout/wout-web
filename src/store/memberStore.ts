@@ -7,6 +7,7 @@ import {
   MemberStatusResponse,
   WeatherPreferenceResponse,
   WeatherPreferenceSetupRequest,
+  WeatherPreferenceUpdateRequest,
 } from '@/types/member';
 
 interface MemberState {
@@ -29,7 +30,7 @@ interface MemberState {
   getMemberWithPreference: () => Promise<boolean>;
 
   updateWeatherPreference: (
-    request: WeatherPreferenceSetupRequest,
+    request: WeatherPreferenceUpdateRequest,
   ) => Promise<boolean>;
 
   updateNickname: (nickname: string) => Promise<boolean>;
@@ -67,7 +68,13 @@ export const useMemberStore = create<MemberState>()(
           return response.data;
         } catch (error) {
           console.error('회원 상태 확인 실패:', error);
-          set({error: error instanceof Error ? error.message : '회원 상태 확인에 실패했습니다', isLoading: false,});
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : '회원 상태 확인에 실패했습니다',
+            isLoading: false,
+          });
           return null;
         }
       },
@@ -93,7 +100,7 @@ export const useMemberStore = create<MemberState>()(
 
           set({
             weatherPreference: response.data,
-            isSetupCompleted: response.data.isSetupCompleted,
+            isSetupCompleted: true, // 날씨 선호도가 있으면 설정 완료로 간주
             isLoading: false,
           });
 
@@ -101,6 +108,11 @@ export const useMemberStore = create<MemberState>()(
           return true;
         } catch (error) {
           console.error('민감도 설정 + 회원 생성 실패:', error);
+          console.error('에러 상세:', {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+          });
+
           set({
             error:
               error instanceof Error
@@ -127,7 +139,7 @@ export const useMemberStore = create<MemberState>()(
           }
 
           const data = response.data;
-          const isCompleted = data.weatherPreference?.isSetupCompleted || false;
+          const isCompleted = !!data.weatherPreference;
 
           set({
             member: data.member,
@@ -144,6 +156,55 @@ export const useMemberStore = create<MemberState>()(
           return true;
         } catch (error) {
           console.error('회원 정보 + 선호도 조회 실패:', error);
+
+          // 404 또는 500 에러인 경우 목업 데이터 사용 (백엔드 준비되지 않음)
+          if (
+            error instanceof Error &&
+            (error.message.includes('404') || error.message.includes('500'))
+          ) {
+            console.log('백엔드 API가 준비되지 않음 → 목업 데이터 사용');
+
+            const currentDeviceId = deviceUtils.getDeviceId();
+
+            // 목업 회원 데이터
+            const mockMember = {
+              id: 1,
+              deviceId: currentDeviceId,
+              nickname: '사용자',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+
+            const mockWeatherPreference = {
+              id: 1,
+              memberId: 1,
+              reactionCold: 'medium' as const,
+              reactionHeat: 'medium' as const,
+              reactionHumidity: 'medium' as const,
+              reactionUv: 'medium' as const,
+              reactionAir: 'medium' as const,
+              importanceCold: 20,
+              importanceHeat: 20,
+              importanceHumidity: 20,
+              importanceUv: 20,
+              importanceAir: 20,
+              comfortTemperature: 22,
+              personalTempCorrection: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+
+            set({
+              member: mockMember,
+              weatherPreference: mockWeatherPreference,
+              isSetupCompleted: true,
+              isLoading: false,
+              error: null,
+            });
+
+            return true;
+          }
+
           set({
             error:
               error instanceof Error
@@ -157,7 +218,7 @@ export const useMemberStore = create<MemberState>()(
 
       // 🔧 날씨 선호도 수정 (기존 회원용)
       updateWeatherPreference: async (
-        request: WeatherPreferenceSetupRequest,
+        request: WeatherPreferenceUpdateRequest,
       ): Promise<boolean> => {
         set({ isLoading: true, error: null });
 
@@ -176,7 +237,7 @@ export const useMemberStore = create<MemberState>()(
 
           set({
             weatherPreference: response.data,
-            isSetupCompleted: response.data.isSetupCompleted,
+            isSetupCompleted: true, // 날씨 선호도가 있으면 설정 완료로 간주
             isLoading: false,
           });
 

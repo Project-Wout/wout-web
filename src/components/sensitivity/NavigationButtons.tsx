@@ -18,13 +18,14 @@ export default function NavigationButtons({
 
   const {
     currentStep,
-    priorities,
-    comfortTemperature,
-    skinReaction,
-    humidityReaction,
-    completeSetup,
+    step1,
+    step2,
+    step3,
+    isCompleted,
+    setCurrentStep,
     nextStep,
     prevStep,
+    completeSetup,
   } = useSensitivityStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,22 +34,18 @@ export default function NavigationButtons({
   const isCurrentStepValid = (): boolean => {
     switch (currentStep) {
       case 1:
-        return priorities.length === 2;
+        return step1.reactionCold !== null && step1.reactionHeat !== null;
       case 2:
-        return comfortTemperature >= 10 && comfortTemperature <= 30;
+        return step2.comfortTemperature !== null;
       case 3:
-        return skinReaction !== null;
-      case 4:
-        return humidityReaction !== null;
-      case 5:
-        return true; // 5단계는 선택사항
+        return step3.importanceCold !== null && step3.importanceHeat !== null;
       default:
         return false;
     }
   };
 
   const handleNext = async () => {
-    if (currentStep === 5) {
+    if (currentStep === 3) {
       // 🚀 마지막 단계 - 백엔드 API 호출
       setIsSubmitting(true);
 
@@ -70,26 +67,14 @@ export default function NavigationButtons({
             router.push('/dashboard');
           }
         } else {
-          // ✅ 실패 시에도 모드에 따른 이동
-          console.log(`백엔드 ${isEditMode ? '수정' : '저장'} 실패했지만 이동`);
-          completeSetup(); // 로컬에서라도 완료 처리
-
-          if (isEditMode) {
-            router.push('/profile');
-          } else {
-            router.push('/dashboard');
-          }
+          // 실패 시 이동하지 않고 에러 메시지 표시
+          alert('민감도 설정에 실패했습니다. 다시 시도해 주세요.');
+          // completeSetup(); // 실패 시 완료 처리하지 않음
         }
       } catch (error) {
         console.error('설정 완료 오류:', error);
-        // ✅ 오류 시에도 모드에 따른 이동 (사용자 경험 고려)
-        completeSetup();
-
-        if (isEditMode) {
-          router.push('/profile');
-        } else {
-          router.push('/dashboard');
-        }
+        alert('민감도 설정 중 오류가 발생했습니다. 다시 시도해 주세요.');
+        // completeSetup(); // 실패 시 완료 처리하지 않음
       } finally {
         setIsSubmitting(false);
       }
@@ -105,7 +90,7 @@ export default function NavigationButtons({
 
   // ✅ 수정/신규 모드에 따른 버튼 텍스트 분기
   const getButtonText = () => {
-    if (currentStep === 5) {
+    if (currentStep === 3) {
       if (isSubmitting) {
         return isEditMode ? '수정 중...' : '저장 중...';
       }

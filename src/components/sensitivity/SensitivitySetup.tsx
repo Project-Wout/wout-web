@@ -38,12 +38,10 @@ export default function SensitivitySetup() {
     }
   }, [isEditMode, setCurrentStep]);
 
-  // 가중치 1-100 → 25-75 변환 함수
+  // 가중치 1-100 → 1-100 변환 함수 (백엔드 요구사항에 맞춤)
   const convertWeight = (frontendWeight: number): number => {
-    const min = 25;
-    const max = 75;
-    const converted = min + ((frontendWeight - 1) * (max - min)) / 99;
-    return Math.round(Math.max(min, Math.min(max, converted)));
+    // 프론트엔드 1-100 → 백엔드 1-100 (그대로 유지)
+    return Math.round(Math.max(1, Math.min(100, frontendWeight)));
   };
 
   const handleSetupComplete = async (): Promise<boolean> => {
@@ -55,11 +53,37 @@ export default function SensitivitySetup() {
       if (step3.importanceHeat === undefined || step3.importanceHeat === null) {
         throw new Error('습도 가중치는 필수입니다');
       }
+      if (
+        step3.importanceHumidity === undefined ||
+        step3.importanceHumidity === null
+      ) {
+        throw new Error('습도 가중치는 필수입니다');
+      }
       if (step3.importanceUv === undefined || step3.importanceUv === null) {
         throw new Error('자외선 가중치는 필수입니다');
       }
       if (step3.importanceAir === undefined || step3.importanceAir === null) {
         throw new Error('대기질 가중치는 필수입니다');
+      }
+
+      // 중요도 값들을 변환
+      const importanceCold = convertWeight(step3.importanceCold);
+      const importanceHeat = convertWeight(step3.importanceHeat);
+      const importanceHumidity = convertWeight(step3.importanceHumidity);
+      const importanceUv = convertWeight(step3.importanceUv);
+      const importanceAir = convertWeight(step3.importanceAir);
+
+      // 합계 검증 (98~102)
+      const totalImportance =
+        importanceCold +
+        importanceHeat +
+        importanceHumidity +
+        importanceUv +
+        importanceAir;
+      if (totalImportance < 98 || totalImportance > 102) {
+        throw new Error(
+          `중요도 합계가 98~102 사이여야 합니다. 현재: ${totalImportance}`,
+        );
       }
 
       const request: WeatherPreferenceSetupRequest = {
@@ -68,25 +92,34 @@ export default function SensitivitySetup() {
         reactionHumidity: step1.reactionHumidity || 'medium',
         reactionUv: step1.reactionUv || 'medium',
         reactionAir: step1.reactionAir || 'medium',
-        importanceCold: convertWeight(step3.importanceCold),
-        importanceHeat: convertWeight(step3.importanceHeat),
-        importanceHumidity: convertWeight(step3.importanceHumidity),
-        importanceUv: convertWeight(step3.importanceUv),
-        importanceAir: convertWeight(step3.importanceAir),
+        importanceCold,
+        importanceHeat,
+        importanceHumidity,
+        importanceUv,
+        importanceAir,
         comfortTemperature: Math.max(
           10,
           Math.min(30, step2.comfortTemperature),
         ),
       };
 
+      // 디버깅용 로그
+      console.log('백엔드로 전송할 데이터:', request);
+      console.log('중요도 합계:', totalImportance);
+
       // API 호출
       let success: boolean;
       if (isEditMode) {
+        console.log('수정 모드: updateWeatherPreference 호출');
         success = await updateWeatherPreference(request);
       } else {
+        console.log(
+          '신규 모드: setupWithPreference 호출 (회원 생성 + 민감도 설정)',
+        );
         success = await setupWithPreference(request);
       }
 
+      console.log('API 호출 결과:', success);
       return success;
     } catch (error) {
       console.error('검증 실패:', error);
@@ -128,7 +161,7 @@ export default function SensitivitySetup() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-primary text-white relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white relative overflow-hidden">
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex-1 flex flex-col">
         {/* 헤더 - 수정/신규 모드 구분 */}
@@ -139,22 +172,22 @@ export default function SensitivitySetup() {
           <p className="text-blue-100">
             {isEditMode
               ? '개인 맞춤 추천을 위해 설정을 업데이트해요'
-              : '개인 맞춤 추천을 위해 5단계 설정이 필요해요'}
+              : '개인 맞춤 추천을 위해 3단계 설정이 필요해요'}
           </p>
         </div>
 
         {/* 진행률 표시 */}
         <div className="px-6 mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-blue-100">{currentStep}/5 단계</span>
+            <span className="text-sm text-blue-100">{currentStep}/3 단계</span>
             <span className="text-sm text-blue-100">
-              {Math.round((currentStep / 5) * 100)}%
+              {Math.round((currentStep / 3) * 100)}%
             </span>
           </div>
           <div className="w-full bg-white/20 rounded-full h-2">
             <div
               className="bg-white rounded-full h-2 transition-all duration-300"
-              style={{ width: `${(currentStep / 5) * 100}%` }}
+              style={{ width: `${(currentStep / 3) * 100}%` }}
             ></div>
           </div>
         </div>

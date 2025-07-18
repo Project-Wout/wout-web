@@ -122,141 +122,124 @@ export default function SensitivityStep1({ onNext, onPrev }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-purple-700 text-white">
-      <div className="container mx-auto px-6 py-8">
-        {/* 헤더 */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2">날씨 민감도 설정</h1>
-          <p className="text-white/80 text-sm">
-            개인 맞춤 추천을 위해 3단계 설정이 필요해요
+    <div className="h-full flex flex-col">
+      {/* 메인 콘텐츠 */}
+      <Card
+        variant="elevated"
+        padding="lg"
+        className="mb-6 text-gray-900 flex-1"
+      >
+        <CardHeader className="text-center">
+          <div className="text-5xl mb-4">🌡️</div>
+          <h2 className="text-xl font-bold mb-2">날씨 민감도를 알려주세요</h2>
+          <p className="text-gray-600 text-sm">
+            각 요소별로 얼마나 민감하신지 선택해주세요
           </p>
-        </div>
+        </CardHeader>
 
-        {/* 진행률 */}
-        <div className="mb-8">
-          <div className="flex justify-between text-white/90 text-xs mb-2">
-            <span>1/3 단계</span>
-            <span>33%</span>
-          </div>
-          <div className="w-full bg-white/20 rounded-full h-1.5">
-            <div className="bg-white rounded-full h-1.5 w-1/3 transition-all duration-300"></div>
-          </div>
-        </div>
-
-        {/* 메인 콘텐츠 */}
-        <Card variant="elevated" padding="lg" className="mb-6 text-gray-900">
-          <CardHeader className="text-center">
-            <div className="text-5xl mb-4">🌡️</div>
-            <h2 className="text-xl font-bold mb-2">날씨 민감도를 알려주세요</h2>
-            <p className="text-gray-600 text-sm">
-              각 요소별로 얼마나 민감하신지 선택해주세요
-            </p>
-          </CardHeader>
-
-          <CardContent>
-            {/* 완료 상태 표시 */}
-            {isComplete && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-green-50 border border-green-200 rounded-xl p-4 text-center mb-6"
-              >
-                <div className="text-green-700 font-semibold text-sm mb-2">
-                  ✅ 설정 완료!
-                </div>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {getSelectedSummary().map((item, index) => (
-                    <span
-                      key={index}
-                      className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* 민감도 카드들 */}
-            <div className="space-y-5">
-              {sensitivityCards.map((card, index) => (
-                <motion.div
-                  key={card.element}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card
-                    variant="outlined"
-                    padding="md"
-                    hover
-                    className="transition-all"
+        <CardContent>
+          {/* 완료 상태 표시 */}
+          {isComplete && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-green-50 border border-green-200 rounded-xl p-4 text-center mb-6"
+            >
+              <div className="text-green-700 font-semibold text-sm mb-2">
+                ✅ 설정 완료!
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {getSelectedSummary().map((item, index) => (
+                  <span
+                    key={index}
+                    className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium"
                   >
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{card.emoji}</div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-base">
-                            {card.title}
-                          </h3>
-                          <p className="text-gray-500 text-xs">
-                            {card.description}
-                          </p>
-                        </div>
-                      </div>
-                    </CardHeader>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
-                    <CardContent>
-                      <div className="flex gap-2">
-                        {card.options.map(option => (
-                          <button
-                            key={option.value}
-                            onClick={() =>
-                              handleOptionSelect(card.element, option.value)
-                            }
-                            className={cn(
-                              'flex-1 p-3 border-2 rounded-xl text-center transition-all',
-                              sensitivity[card.element] === option.value
-                                ? 'border-blue-500 bg-blue-500 text-white scale-105'
-                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:-translate-y-1',
-                            )}
-                          >
-                            <div className="text-lg mb-1">{option.emoji}</div>
-                            <div className="text-xs font-semibold">
-                              {option.label}
-                            </div>
-                          </button>
-                        ))}
+          {/* 민감도 카드들 */}
+          <div className="space-y-5">
+            {sensitivityCards.map((card, index) => (
+              <motion.div
+                key={card.element}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card
+                  variant="outlined"
+                  padding="md"
+                  hover
+                  className="transition-all"
+                >
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">{card.emoji}</div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base">
+                          {card.title}
+                        </h3>
+                        <p className="text-gray-500 text-xs">
+                          {card.description}
+                        </p>
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                    </div>
+                  </CardHeader>
 
-        {/* 네비게이션 버튼 */}
-        <div className="flex gap-3">
-          <button
-            onClick={onPrev}
-            className="flex-1 py-4 bg-transparent border-2 border-white/50 text-white rounded-xl font-semibold hover:bg-white/10 transition-colors"
-          >
-            이전
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={!isComplete}
-            className={cn(
-              'flex-1 py-4 rounded-xl font-semibold transition-colors',
-              isComplete
-                ? 'bg-white text-blue-600 hover:bg-blue-50'
-                : 'bg-white/30 text-white/60 cursor-not-allowed',
-            )}
-          >
-            다음
-          </button>
-        </div>
+                  <CardContent>
+                    <div className="flex gap-2">
+                      {card.options.map(option => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleOptionSelect(card.element, option.value)
+                          }
+                          className={cn(
+                            'flex-1 p-3 border-2 rounded-xl text-center transition-all',
+                            sensitivity[card.element] === option.value
+                              ? 'border-blue-500 bg-blue-500 text-white scale-105'
+                              : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:-translate-y-1',
+                          )}
+                        >
+                          <div className="text-lg mb-1">{option.emoji}</div>
+                          <div className="text-xs font-semibold">
+                            {option.label}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 네비게이션 버튼 */}
+      <div className="flex gap-3 mt-auto">
+        <button
+          onClick={onPrev}
+          className="flex-1 py-4 bg-transparent border-2 border-white/50 text-white rounded-xl font-semibold hover:bg-white/10 transition-colors"
+        >
+          이전
+        </button>
+        <button
+          onClick={handleNext}
+          disabled={!isComplete}
+          className={cn(
+            'flex-1 py-4 rounded-xl font-semibold transition-colors',
+            isComplete
+              ? 'bg-white text-blue-600 hover:bg-blue-50'
+              : 'bg-white/30 text-white/60 cursor-not-allowed',
+          )}
+        >
+          다음
+        </button>
       </div>
     </div>
   );

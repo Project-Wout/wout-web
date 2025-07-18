@@ -34,12 +34,19 @@ export const memberApi = {
     );
   },
 
+  // 🆕 회원 정보 조회 (기본 정보만)
+  async getMemberInfo(deviceId: string): Promise<ApiResponse<MemberResponse>> {
+    return apiClient.get<ApiResponse<MemberResponse>>(
+      `/api/my/${deviceId}/info`,
+    );
+  },
+
   // 🆕 기존 회원 정보 + 선호도 조회 (대시보드용)
   async getMemberWithPreference(
     deviceId: string,
   ): Promise<ApiResponse<MemberWithPreferenceResponse>> {
     return apiClient.get<ApiResponse<MemberWithPreferenceResponse>>(
-      `/api/members/${deviceId}`,
+      `/api/dashboard/${deviceId}`,
     );
   },
 
@@ -49,7 +56,7 @@ export const memberApi = {
     request: WeatherPreferenceUpdateRequest,
   ): Promise<ApiResponse<WeatherPreferenceResponse>> {
     return apiClient.put<ApiResponse<WeatherPreferenceResponse>>(
-      `/api/members/${deviceId}/weather-preference`,
+      `/api/my/${deviceId}/weather-preference`,
       request,
     );
   },
@@ -62,7 +69,7 @@ export const memberApi = {
     const request: NicknameUpdateRequest = { nickname };
 
     return apiClient.patch<ApiResponse<MemberResponse>>(
-      `/api/members/${deviceId}/nickname`,
+      `/api/my/${deviceId}/nickname`,
       request,
     );
   },
@@ -73,7 +80,7 @@ export const memberApi = {
     request: LocationUpdateRequest,
   ): Promise<ApiResponse<MemberResponse>> {
     return apiClient.patch<ApiResponse<MemberResponse>>(
-      `/api/members/${deviceId}/location`,
+      `/api/my/${deviceId}/location`,
       request,
     );
   },
@@ -83,7 +90,7 @@ export const memberApi = {
     deviceId: string,
   ): Promise<ApiResponse<SetupStatusResponse>> {
     return apiClient.get<ApiResponse<SetupStatusResponse>>(
-      `/api/members/${deviceId}/weather-preference/status`,
+      `/api/my/${deviceId}/weather-preference`,
     );
   },
 
@@ -91,8 +98,6 @@ export const memberApi = {
   async deactivateMember(
     deviceId: string,
   ): Promise<ApiResponse<MemberResponse>> {
-    return apiClient.delete<ApiResponse<MemberResponse>>(
-      `/api/members/${deviceId}`,
-    );
+    return apiClient.delete<ApiResponse<MemberResponse>>(`/api/my/${deviceId}`);
   },
 };

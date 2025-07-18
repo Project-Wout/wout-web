@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSensitivityStore } from '@/store/sensitivityStore';
+import { useMemberStore } from '@/store/memberStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -26,9 +27,21 @@ export default function ProfilePage() {
     // resetSetup, // (이 함수도 직접 구현 필요)
   } = useSensitivityStore();
 
+  const { member, weatherPreference, getMemberWithPreference, isLoading } =
+    useMemberStore();
+
+  // 회원 정보 로드
+  useEffect(() => {
+    getMemberWithPreference();
+  }, [getMemberWithPreference]);
+
+  // 민감도 설정에서 가져온 값들 (로컬 상태)
   const comfortTemperature = step2.comfortTemperature;
   const skinReaction = step1.reactionCold; // 또는 원하는 reaction 필드
   const humidityReaction = step1.reactionHumidity;
+
+  // 백엔드에서 가져온 회원 정보 (서버 상태)
+  const memberNickname = member?.nickname || '사용자님';
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -113,6 +126,18 @@ export default function ProfilePage() {
     },
   ];
 
+  // 로딩 중일 때 표시할 화면
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">프로필 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
@@ -123,7 +148,7 @@ export default function ProfilePage() {
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border border-white/30">
               <span className="text-3xl">{userType.emoji}</span>
             </div>
-            <h1 className="text-2xl font-bold mb-2">사용자님</h1>
+            <h1 className="text-2xl font-bold mb-2">{memberNickname}</h1>
             <div className="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
               {userType.type}
             </div>

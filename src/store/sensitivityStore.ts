@@ -5,6 +5,9 @@ import { SensitivityState } from '@/types/sensitivity';
 export const useSensitivityStore = create<
   SensitivityState & {
     setCurrentStep: (step: 1 | 2 | 3) => void;
+    nextStep: () => void;
+    prevStep: () => void;
+    completeSetup: () => void;
   }
 >()(
   persist(
@@ -29,6 +32,19 @@ export const useSensitivityStore = create<
       error: null,
       isCompleted: false,
       setCurrentStep: step => set({ currentStep: step }),
+      nextStep: () => {
+        const { currentStep } = get();
+        if (currentStep < 3) {
+          set({ currentStep: (currentStep + 1) as 1 | 2 | 3 });
+        }
+      },
+      prevStep: () => {
+        const { currentStep } = get();
+        if (currentStep > 1) {
+          set({ currentStep: (currentStep - 1) as 1 | 2 | 3 });
+        }
+      },
+      completeSetup: () => set({ isCompleted: true }),
     }),
     {
       name: 'sensitivity-settings',
