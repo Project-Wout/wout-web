@@ -6,6 +6,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { SensitivityData, Step1State } from '@/types/sensitivity';
 import { ReactionLevel } from '@/types/common';
+import { useSensitivityStore } from '@/store/sensitivityStore';
 
 interface SensitivityCardData {
   element: keyof Step1State;
@@ -84,18 +85,12 @@ const sensitivityCards: SensitivityCardData[] = [
 ];
 
 export default function SensitivityStep1({ onNext, onPrev }: Props) {
-  const [sensitivity, setSensitivity] = useState<Step1State>({
-    reactionCold: null,
-    reactionHeat: null,
-    reactionHumidity: null,
-    reactionUv: null,
-    reactionAir: null,
-  });
+  const { step1, setStep1 } = useSensitivityStore();
 
-  const isComplete = Object.values(sensitivity).every(value => value !== null);
+  const isComplete = Object.values(step1).every(value => value !== null);
 
   const getSelectedSummary = () => {
-    return Object.entries(sensitivity)
+    return Object.entries(step1)
       .filter(([_, value]) => value !== null)
       .map(([key, value]) => {
         const card = sensitivityCards.find(c => c.element === key);
@@ -109,15 +104,12 @@ export default function SensitivityStep1({ onNext, onPrev }: Props) {
     element: keyof Step1State,
     value: ReactionLevel,
   ) => {
-    setSensitivity(prev => ({
-      ...prev,
-      [element]: value,
-    }));
+    setStep1({ ...step1, [element]: value });
   };
 
   const handleNext = () => {
     if (isComplete) {
-      onNext(sensitivity);
+      onNext(step1);
     }
   };
 
@@ -200,7 +192,7 @@ export default function SensitivityStep1({ onNext, onPrev }: Props) {
                           }
                           className={cn(
                             'flex-1 p-3 border-2 rounded-xl text-center transition-all',
-                            sensitivity[card.element] === option.value
+                            step1[card.element] === option.value
                               ? 'border-blue-500 bg-blue-500 text-white scale-105'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:-translate-y-1',
                           )}
@@ -219,28 +211,6 @@ export default function SensitivityStep1({ onNext, onPrev }: Props) {
           </div>
         </CardContent>
       </Card>
-
-      {/* 네비게이션 버튼 */}
-      <div className="flex gap-3 mt-auto">
-        <button
-          onClick={onPrev}
-          className="flex-1 py-4 bg-transparent border-2 border-white/50 text-white rounded-xl font-semibold hover:bg-white/10 transition-colors"
-        >
-          이전
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={!isComplete}
-          className={cn(
-            'flex-1 py-4 rounded-xl font-semibold transition-colors',
-            isComplete
-              ? 'bg-white text-blue-600 hover:bg-blue-50'
-              : 'bg-white/30 text-white/60 cursor-not-allowed',
-          )}
-        >
-          다음
-        </button>
-      </div>
     </div>
   );
 }

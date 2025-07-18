@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { Step2State } from '@/types/sensitivity';
+import { useSensitivityStore } from '@/store/sensitivityStore';
 
 interface Props {
   onNext: (data: Step2State) => void;
@@ -18,7 +19,7 @@ export default function SensitivityStep2({
   onPrev,
   initialValue = 19,
 }: Props) {
-  const [temperature, setTemperature] = useState(initialValue);
+  const { step2, setStep2 } = useSensitivityStore();
 
   // 온도별 설명
   const getTemperatureDescription = (temp: number) => {
@@ -32,11 +33,11 @@ export default function SensitivityStep2({
   };
 
   const handleTemperatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTemperature(parseInt(e.target.value));
+    setStep2({ comfortTemperature: parseInt(e.target.value) });
   };
 
   const handleNext = () => {
-    onNext({ comfortTemperature: temperature });
+    onNext(step2);
   };
 
   return (
@@ -75,71 +76,29 @@ export default function SensitivityStep2({
           {/* 온도 표시 */}
           <div className="text-center mb-10">
             <motion.div
-              key={temperature}
+              key={step2.comfortTemperature}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3 }}
               className="text-6xl font-bold text-blue-500 mb-2 drop-shadow-lg"
             >
-              {temperature}°C
+              {step2.comfortTemperature}°C
             </motion.div>
             <div className="text-xl text-gray-600 font-semibold">
-              {getTemperatureDescription(temperature)}
+              {getTemperatureDescription(step2.comfortTemperature)}
             </div>
           </div>
 
           {/* 슬라이더 */}
-          <div className="mb-10 px-2">
-            <div className="flex justify-between text-gray-600 text-sm font-semibold mb-3">
-              <span>10°C</span>
-              <span>20°C</span>
-              <span>30°C</span>
-            </div>
-            <div className="relative">
-              <input
-                type="range"
-                min="10"
-                max="30"
-                value={temperature}
-                onChange={handleTemperatureChange}
-                className="w-full h-3 bg-gradient-to-r from-blue-400 via-green-400 to-red-400 rounded-lg appearance-none cursor-pointer slider"
-                style={{
-                  background:
-                    'linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #f87171 100%)',
-                }}
-              />
-              <style jsx>{`
-                .slider::-webkit-slider-thumb {
-                  appearance: none;
-                  width: 28px;
-                  height: 28px;
-                  border-radius: 50%;
-                  background: white;
-                  border: 4px solid #3b82f6;
-                  cursor: pointer;
-                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-                  transition: all 0.2s ease;
-                }
+          <input
+            type="range"
+            min={10}
+            max={30}
+            value={step2.comfortTemperature}
+            onChange={handleTemperatureChange}
+            className="w-full accent-blue-500 mb-4"
+          />
 
-                .slider::-webkit-slider-thumb:hover {
-                  transform: scale(1.1);
-                  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
-                }
-
-                .slider::-moz-range-thumb {
-                  width: 28px;
-                  height: 28px;
-                  border-radius: 50%;
-                  background: white;
-                  cursor: pointer;
-                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-                  border: none;
-                }
-              `}</style>
-            </div>
-          </div>
-
-          {/* 가이드 텍스트 */}
           <Card
             variant="outlined"
             padding="sm"
@@ -151,22 +110,6 @@ export default function SensitivityStep2({
           </Card>
         </CardContent>
       </Card>
-
-      {/* 네비게이션 버튼 */}
-      <div className="flex gap-3 mt-auto">
-        <button
-          onClick={onPrev}
-          className="flex-1 py-4 bg-transparent border-2 border-white/50 text-white rounded-xl font-semibold hover:bg-white/10 transition-colors"
-        >
-          이전
-        </button>
-        <button
-          onClick={handleNext}
-          className="flex-1 py-4 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
-        >
-          다음
-        </button>
-      </div>
     </div>
   );
 }

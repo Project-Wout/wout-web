@@ -21,6 +21,9 @@ export default function SensitivitySetup() {
     step3,
     isLoading: sensitivityLoading,
     setCurrentStep,
+    setStep1,
+    setStep2,
+    setStep3,
   } = useSensitivityStore();
 
   const {
@@ -40,8 +43,40 @@ export default function SensitivitySetup() {
 
   // 가중치 1-100 → 1-100 변환 함수 (백엔드 요구사항에 맞춤)
   const convertWeight = (frontendWeight: number): number => {
-    // 프론트엔드 1-100 → 백엔드 1-100 (그대로 유지)
-    return Math.round(Math.max(1, Math.min(100, frontendWeight)));
+    // 0~1 실수 값을 1~100 정수로 변환
+    return Math.round(Math.max(1, Math.min(100, frontendWeight * 100)));
+  };
+
+  // 중요도 값들을 정규화(합계 100) 함수
+  const normalizeTo100 = (values: Record<string, number>) => {
+    const sum = Object.values(values).reduce((acc, v) => acc + v, 0);
+    if (sum === 0) return values;
+    let normalized: Record<string, number> = {};
+    Object.entries(values).forEach(([key, value]) => {
+      normalized[key] = Math.round((value / sum) * 100);
+    });
+    // 0을 1로 보정
+    Object.keys(normalized).forEach(key => {
+      if (normalized[key] < 1) normalized[key] = 1;
+    });
+    // 합계가 100이 넘으면 가장 큰 값에서 빼기
+    let total = Object.values(normalized).reduce((a, b) => a + b, 0);
+    while (total > 100) {
+      const maxKey = Object.keys(normalized).reduce((a, b) =>
+        normalized[a] > normalized[b] ? a : b,
+      );
+      normalized[maxKey] -= 1;
+      total--;
+    }
+    // 합계가 100 미만이면 가장 큰 값에 더하기
+    while (total < 100) {
+      const maxKey = Object.keys(normalized).reduce((a, b) =>
+        normalized[a] > normalized[b] ? a : b,
+      );
+      normalized[maxKey] += 1;
+      total++;
+    }
+    return normalized;
   };
 
   const handleSetupComplete = async (): Promise<boolean> => {
@@ -66,12 +101,19 @@ export default function SensitivitySetup() {
         throw new Error('대기질 가중치는 필수입니다');
       }
 
-      // 중요도 값들을 변환
-      const importanceCold = convertWeight(step3.importanceCold);
-      const importanceHeat = convertWeight(step3.importanceHeat);
-      const importanceHumidity = convertWeight(step3.importanceHumidity);
-      const importanceUv = convertWeight(step3.importanceUv);
-      const importanceAir = convertWeight(step3.importanceAir);
+      // 중요도 값들을 변환 및 정규화
+      const normalized = normalizeTo100({
+        importanceCold: step3.importanceCold,
+        importanceHeat: step3.importanceHeat,
+        importanceHumidity: step3.importanceHumidity,
+        importanceUv: step3.importanceUv,
+        importanceAir: step3.importanceAir,
+      });
+      const importanceCold = normalized.importanceCold;
+      const importanceHeat = normalized.importanceHeat;
+      const importanceHumidity = normalized.importanceHumidity;
+      const importanceUv = normalized.importanceUv;
+      const importanceAir = normalized.importanceAir;
 
       // 합계 검증 (98~102)
       const totalImportance =
@@ -106,6 +148,12 @@ export default function SensitivitySetup() {
       // 디버깅용 로그
       console.log('백엔드로 전송할 데이터:', request);
       console.log('중요도 합계:', totalImportance);
+      console.log('step3:', step3);
+      console.log('importanceCold:', step3.importanceCold);
+      console.log('importanceHeat:', step3.importanceHeat);
+      console.log('importanceHumidity:', step3.importanceHumidity);
+      console.log('importanceUv:', step3.importanceUv);
+      console.log('importanceAir:', step3.importanceAir);
 
       // API 호출
       let success: boolean;
@@ -132,33 +180,49 @@ export default function SensitivitySetup() {
       case 1:
         return (
           <SensitivityStep1
-            onNext={() => setCurrentStep(2)}
+            onNext={data => {
+              setStep1(data);
+              setTimeout(() => setCurrentStep(2), 0);
+            }}
             onPrev={() => setCurrentStep(1)}
           />
         );
       case 2:
         return (
           <SensitivityStep2
-            onNext={() => setCurrentStep(3)}
+            onNext={data => {
+              setStep2(data);
+              setTimeout(() => setCurrentStep(3), 0);
+            }}
             onPrev={() => setCurrentStep(2)}
           />
         );
       case 3:
         return (
           <SensitivityStep3
-            onComplete={handleSetupComplete}
+            onComplete={data => {
+              setStep3(data);
+              // 기존 handleSetupComplete는 NavigationButtons에서 호출됨
+            }}
             onPrev={() => setCurrentStep(2)}
           />
         );
       default:
         return (
           <SensitivityStep1
-            onNext={() => setCurrentStep(2)}
+            onNext={data => {
+              setStep1(data);
+              setTimeout(() => setCurrentStep(2), 0);
+            }}
             onPrev={() => setCurrentStep(1)}
           />
         );
     }
   };
+
+  useEffect(() => {
+    console.log('currentStep:', currentStep);
+  }, [currentStep]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white relative overflow-hidden">

@@ -8,6 +8,9 @@ export const useSensitivityStore = create<
     nextStep: () => void;
     prevStep: () => void;
     completeSetup: () => void;
+    setStep1: (data: SensitivityState['step1']) => void;
+    setStep2: (data: SensitivityState['step2']) => void;
+    setStep3: (data: SensitivityState['step3']) => void;
   }
 >()(
   persist(
@@ -32,6 +35,9 @@ export const useSensitivityStore = create<
       error: null,
       isCompleted: false,
       setCurrentStep: step => set({ currentStep: step }),
+      setStep1: data => set({ step1: data }),
+      setStep2: data => set({ step2: data }),
+      setStep3: data => set({ step3: data }),
       nextStep: () => {
         const { currentStep } = get();
         if (currentStep < 3) {

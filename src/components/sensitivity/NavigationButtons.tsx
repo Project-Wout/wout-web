@@ -34,7 +34,13 @@ export default function NavigationButtons({
   const isCurrentStepValid = (): boolean => {
     switch (currentStep) {
       case 1:
-        return step1.reactionCold !== null && step1.reactionHeat !== null;
+        return (
+          step1.reactionCold !== null &&
+          step1.reactionHeat !== null &&
+          step1.reactionHumidity !== null &&
+          step1.reactionUv !== null &&
+          step1.reactionAir !== null
+        );
       case 2:
         return step2.comfortTemperature !== null;
       case 3:
@@ -43,6 +49,10 @@ export default function NavigationButtons({
         return false;
     }
   };
+
+  // 상태 및 유효성 로그 추가
+  console.log('store step1:', step1);
+  console.log('isCurrentStepValid:', isCurrentStepValid());
 
   const handleNext = async () => {
     if (currentStep === 3) {

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { Step3State } from '@/types/sensitivity';
+import { useSensitivityStore } from '@/store/sensitivityStore';
 
 interface ImportanceValues {
   importanceCold: number;
@@ -61,24 +62,15 @@ const importanceSliders: ImportanceSliderData[] = [
 ];
 
 export default function SensitivityStep3({ onComplete, onPrev }: Props) {
-  const [values, setValues] = useState<Step3State>({
-    importanceCold: 0.2,
-    importanceHeat: 0.2,
-    importanceHumidity: 0.2,
-    importanceUv: 0.2,
-    importanceAir: 0.2,
-  });
+  const { step3, setStep3 } = useSensitivityStore();
 
   const handleSliderChange = (key: keyof Step3State, value: number) => {
-    setValues(prev => ({
-      ...prev,
-      [key]: value / 100, // 1~100 슬라이더 값을 0~1로 변환하여 저장
-    }));
+    setStep3({ ...step3, [key]: value / 100 }); // 1~100 슬라이더 값을 0~1로 변환하여 저장
   };
 
   // 퍼센트 값을 0-1 사이 값으로 변환하여 전송
   const handleComplete = () => {
-    onComplete(values);
+    onComplete(step3);
   };
 
   // 점수 레벨 텍스트
@@ -165,7 +157,7 @@ export default function SensitivityStep3({ onComplete, onPrev }: Props) {
                         type="range"
                         min="1"
                         max="100"
-                        value={values[slider.key] * 100}
+                        value={step3[slider.key] * 100}
                         onChange={e =>
                           handleSliderChange(
                             slider.key,
@@ -206,8 +198,8 @@ export default function SensitivityStep3({ onComplete, onPrev }: Props) {
                     {/* 값 표시 */}
                     <div className="text-center">
                       <span className="inline-block bg-orange-100 border border-orange-200 px-3 py-1 rounded-lg text-orange-700 font-semibold text-sm">
-                        {getScoreText(values[slider.key] * 100)} (
-                        {values[slider.key] * 100})
+                        {getScoreText(step3[slider.key] * 100)} (
+                        {step3[slider.key] * 100})
                       </span>
                     </div>
                   </CardContent>
@@ -230,20 +222,7 @@ export default function SensitivityStep3({ onComplete, onPrev }: Props) {
       </Card>
 
       {/* 네비게이션 버튼 */}
-      <div className="flex gap-3 mt-auto">
-        <button
-          onClick={onPrev}
-          className="flex-1 py-4 bg-transparent border-2 border-white/50 text-white rounded-xl font-semibold hover:bg-white/10 transition-colors"
-        >
-          이전
-        </button>
-        <button
-          onClick={handleComplete}
-          className="flex-1 py-4 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
-        >
-          설정 완료
-        </button>
-      </div>
+      {/* 네비게이션 버튼 렌더링 부분(이전/설정 완료 버튼) 전체 삭제 */}
     </div>
   );
 }

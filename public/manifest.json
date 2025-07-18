@@ -1,0 +1,10 @@
+{
+  "name": "와웃 (Wout)",
+  "short_name": "Wout",
+  "description": "날씨에 맞는 아웃핏을 추천해드려요",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait"
+}
