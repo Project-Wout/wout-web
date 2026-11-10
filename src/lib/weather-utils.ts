@@ -96,7 +96,7 @@ export function calculateWeatherScore(
   airQuality: number,
   uvIndex: number,
   sensitivityData: SensitivityData,
-): WeatherScore {
+) {
   // 각 요소별 점수 계산 (0-100)
   const tempScore = calculateTemperatureScore(temperature, sensitivityData);
   const humidityScore = calculateHumidityScore(humidity, sensitivityData);
