@@ -11,9 +11,9 @@ export interface WeatherScoreResponse {
 }
 
 export interface ElementScoreDetails {
-  temperature: number;
+  cold: number;
+  heat: number;
   humidity: number;
-  wind: number;
   uv: number;
   airQuality: number;
 }
@@ -34,7 +34,7 @@ export interface BackendLocationInfo {
   cityName: string;
 }
 
-export type WeatherGrade = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' | 'TERRIBLE';
+export type WeatherGrade = 'PERFECT' | 'GOOD' | 'FAIR' | 'POOR' | 'TERRIBLE';
 
 // 기존 프론트엔드 타입들 유지
 export type WeatherCondition =
@@ -87,13 +87,7 @@ export interface WeatherScore {
   emoji: string;
   grade: 'excellent' | 'good' | 'fair' | 'poor' | 'terrible';
   message: string;
-  breakdown: {
-    temperature: number;
-    humidity: number;
-    windSpeed: number;
-    airQuality: number;
-    uvIndex: number;
-  };
+  breakdown: ElementScoreDetails;
 }
 
 export interface PersonalFeelsLike {

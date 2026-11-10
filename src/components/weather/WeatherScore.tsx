@@ -117,23 +117,44 @@ export default function WeatherScore() {
           {showBreakdown && (
             <div className="mt-4 space-y-3">
               <div className="grid grid-cols-1 gap-3">
-                {/* 온도 점수 */}
+                {/* 추위 점수 */}
                 <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                   <div className="flex items-center">
-                    <span className="text-lg mr-3">🌡️</span>
-                    <span className="text-sm font-medium">온도</span>
+                    <span className="text-lg mr-3">🥶</span>
+                    <span className="text-sm font-medium">추위</span>
                   </div>
                   <div className="flex items-center">
                     <div className="w-20 h-2 bg-gray-200 rounded-full mr-3">
                       <div
                         className="h-full bg-blue-500 rounded-full"
                         style={{
-                          width: `${personalScore.breakdown.temperature}%`,
+                          width: `${personalScore.breakdown.cold}%`,
                         }}
                       ></div>
                     </div>
                     <span className="text-sm font-semibold w-8 text-right">
-                      {personalScore.breakdown.temperature}
+                      {personalScore.breakdown.cold}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 더위 점수 */}
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <div className="flex items-center">
+                    <span className="text-lg mr-3">🥵</span>
+                    <span className="text-sm font-medium">더위</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-20 h-2 bg-gray-200 rounded-full mr-3">
+                      <div
+                        className="h-full bg-orange-500 rounded-full"
+                        style={{
+                          width: `${personalScore.breakdown.heat}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-semibold w-8 text-right">
+                      {personalScore.breakdown.heat}
                     </span>
                   </div>
                 </div>
@@ -155,27 +176,6 @@ export default function WeatherScore() {
                     </div>
                     <span className="text-sm font-semibold w-8 text-right">
                       {personalScore.breakdown.humidity}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 바람 점수 */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <span className="text-lg mr-3">💨</span>
-                    <span className="text-sm font-medium">바람</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-20 h-2 bg-gray-200 rounded-full mr-3">
-                      <div
-                        className="h-full bg-gray-500 rounded-full"
-                        style={{
-                          width: `${personalScore.breakdown.windSpeed}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-semibold w-8 text-right">
-                      {personalScore.breakdown.windSpeed}
                     </span>
                   </div>
                 </div>
@@ -211,11 +211,11 @@ export default function WeatherScore() {
                     <div className="w-20 h-2 bg-gray-200 rounded-full mr-3">
                       <div
                         className="h-full bg-yellow-500 rounded-full"
-                        style={{ width: `${personalScore.breakdown.uvIndex}%` }}
+                        style={{ width: `${personalScore.breakdown.uv}%` }}
                       ></div>
                     </div>
                     <span className="text-sm font-semibold w-8 text-right">
-                      {personalScore.breakdown.uvIndex}
+                      {personalScore.breakdown.uv}
                     </span>
                   </div>
                 </div>

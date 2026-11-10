@@ -6,6 +6,7 @@ import {
   HourlyWeather,
   LocationInfo,
   WeatherScore,
+  WeatherGrade,
   PersonalFeelsLike,
   WeatherScoreResponse,
 } from '@/types/weather';
@@ -33,9 +34,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
     set({ location });
 
     // 위치가 설정되면 자동으로 날씨 데이터 fetch
-    if (location.permission === 'granted') {
-      get().fetchWeatherData(location.lat, location.lon);
-    }
+    get().fetchWeatherData(location.lat, location.lon);
   },
 
   // 🔥 실제 백엔드 API 호출로 변경
@@ -101,16 +100,9 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
       // 백엔드에서 받은 개인화 점수
       const personalScore: WeatherScore = {
         total: backendData.totalScore || 0,
-        emoji: getGradeEmoji(backendData.grade || 'FAIR'),
-        grade: convertGradeToLowercase(backendData.grade || 'FAIR'),
+        ...GRADE_DISPLAY[backendData.grade],
         message: backendData.message || '날씨 정보를 확인하세요',
-        breakdown: {
-          temperature: backendData.elementScores.temperature || 0,
-          humidity: backendData.elementScores.humidity || 0,
-          windSpeed: backendData.elementScores.wind || 0,
-          airQuality: backendData.elementScores.airQuality || 0,
-          uvIndex: backendData.elementScores.uv || 0,
-        },
+        breakdown: backendData.elementScores,
       };
 
       // 개인별 체감온도
@@ -205,7 +197,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
   // 데이터 새로고침
   refreshData: async () => {
     const { location } = get();
-    if (location && location.permission === 'granted') {
+    if (location) {
       await get().fetchWeatherData(location.lat, location.lon);
     }
   },
@@ -217,32 +209,16 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
 }));
 
 // 🆕 헬퍼 함수들 추가
-function getGradeEmoji(grade: string): string {
-  const emojiMap: Record<string, string> = {
-    EXCELLENT: '😊',
-    GOOD: '🙂',
-    FAIR: '😐',
-    POOR: '😰',
-    TERRIBLE: '😵',
-  };
-  return emojiMap[grade] || '😐';
-}
-
-function convertGradeToLowercase(
-  grade: string,
-): 'excellent' | 'good' | 'fair' | 'poor' | 'terrible' {
-  const gradeMap: Record<
-    string,
-    'excellent' | 'good' | 'fair' | 'poor' | 'terrible'
-  > = {
-    EXCELLENT: 'excellent',
-    GOOD: 'good',
-    FAIR: 'fair',
-    POOR: 'poor',
-    TERRIBLE: 'terrible',
-  };
-  return gradeMap[grade] || 'fair';
-}
+const GRADE_DISPLAY: Record<
+  WeatherGrade,
+  Pick<WeatherScore, 'grade' | 'emoji'>
+> = {
+  PERFECT: { grade: 'excellent', emoji: '😊' },
+  GOOD: { grade: 'good', emoji: '🙂' },
+  FAIR: { grade: 'fair', emoji: '😐' },
+  POOR: { grade: 'poor', emoji: '😰' },
+  TERRIBLE: { grade: 'terrible', emoji: '😵' },
+};
 
 function getAirQualityGrade(
   pm25: number,
