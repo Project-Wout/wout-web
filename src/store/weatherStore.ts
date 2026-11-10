@@ -34,9 +34,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
     set({ location });
 
     // 위치가 설정되면 자동으로 날씨 데이터 fetch
-    if (location.permission === 'granted') {
-      get().fetchWeatherData(location.lat, location.lon);
-    }
+    get().fetchWeatherData(location.lat, location.lon);
   },
 
   // 🔥 실제 백엔드 API 호출로 변경
@@ -199,7 +197,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
   // 데이터 새로고침
   refreshData: async () => {
     const { location } = get();
-    if (location && location.permission === 'granted') {
+    if (location) {
       await get().fetchWeatherData(location.lat, location.lon);
     }
   },
